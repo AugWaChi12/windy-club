@@ -10,27 +10,26 @@ const replicate = new Replicate({
 const GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions";
 
 const STYLE_PROMPTS: Record<string, string> = {
-  kawaii: "kawaii style, chibi, cute, pastel colors, simple shapes",
-  comic: "comic book style, bold lines, vibrant colors, pop art",
-  minimal: "minimalist style, clean lines, flat design, simple",
-  anime: "anime style, manga, japanese illustration, detailed",
-  pixel: "pixel art style, retro, 8-bit, game style",
+  kawaii: "kawaii chibi sticker, thick black outlines, flat cel-shaded coloring, soft pastel palette, rounded simple shapes, no gradients, consistent 2D cartoon look",
+  comic: "American comic book sticker, bold uniform black ink outlines, flat cel-shaded vibrant colors, halftone dots, pop art style, consistent 2D cartoon look",
+  minimal: "minimalist flat design sticker, thin uniform outlines, solid flat colors, geometric simple shapes, no shadows no gradients, consistent 2D vector look",
+  anime: "anime manga sticker, clean uniform black outlines, flat cel-shaded coloring, big expressive eyes, Japanese illustration style, consistent 2D anime look",
+  pixel: "pixel art sticker, crisp 16-bit retro style, limited color palette, sharp pixel edges, no anti-aliasing, consistent retro game sprite look",
 };
 
-const FREE_DAILY_LIMIT = 3;
+const FREE_DAILY_LIMIT = 999;
 const DELAY_BETWEEN_REQUESTS_MS = 8000;
 
 // Detect if text contains non-ASCII (Thai, Japanese, etc.)
 const NON_LATIN_PATTERN = /[^\u0000-\u007F]/;
 
-async function translateToEnglish(text: string): Promise<string> {
+async function enhancePrompt(text: string, styleName: string): Promise<string> {
   const groqKey = process.env.GROQ_API_KEY;
   if (!groqKey) return text;
 
-  // Skip translation if text is already English/ASCII
-  if (!NON_LATIN_PATTERN.test(text)) return text;
-
   try {
+    const needsTranslation = NON_LATIN_PATTERN.test(text);
+
     const response = await fetch(GROQ_API_URL, {
       method: "POST",
       headers: {
@@ -42,26 +41,33 @@ async function translateToEnglish(text: string): Promise<string> {
         messages: [
           {
             role: "system",
-            content:
-              "You are a translator. Translate the user's text to English. Output ONLY the English translation, nothing else. Keep it concise and descriptive for image generation.",
+            content: `You are a sticker prompt engineer. Your job:
+1. ${needsTranslation ? "Translate the input to English." : "Keep the English input as-is."}
+2. Rewrite it as a detailed, specific image generation prompt for a "${styleName}" style sticker.
+3. Include specific details about the subject: pose, expression, colors, props.
+4. Keep the description under 60 words.
+5. Output ONLY the prompt text, nothing else.
+
+Example input: "orange cat eating ramen"
+Example output: "a chubby orange tabby cat sitting upright, happily slurping ramen noodles from a white bowl with chopsticks, eyes closed with joy, steam rising, warm orange fur with darker stripes"`,
           },
           { role: "user", content: text },
         ],
-        temperature: 0.3,
+        temperature: 0.2,
         max_tokens: 200,
       }),
     });
 
     if (!response.ok) {
-      console.error("Groq translation error:", response.status);
-      return text;
+      console.error("Groq enhance error:", response.status);
+      return NON_LATIN_PATTERN.test(text) ? text : text;
     }
 
     const data = await response.json();
-    const translated = data.choices?.[0]?.message?.content?.trim();
-    return translated || text;
+    const enhanced = data.choices?.[0]?.message?.content?.trim();
+    return enhanced || text;
   } catch (error) {
-    console.error("Translation failed:", error);
+    console.error("Prompt enhancement failed:", error);
     return text;
   }
 }
@@ -115,10 +121,10 @@ export async function POST(request: NextRequest) {
   const stickerCount = Math.min(Math.max(Number(count) || 4, 1), isPro ? 8 : 4);
   const styleModifier = STYLE_PROMPTS[style] || STYLE_PROMPTS.kawaii;
 
-  // Translate non-English prompts to English for better image generation
-  const translatedPrompt = await translateToEnglish(prompt);
+  // Enhance + translate prompt via Groq for better & more consistent results
+  const enhancedPrompt = await enhancePrompt(prompt, style || "kawaii");
 
-  const fullPrompt = `A sticker of ${translatedPrompt}, ${styleModifier}, white background, no text, isolated object, high quality, digital art, sticker design`;
+  const fullPrompt = `A sticker of ${enhancedPrompt}, ${styleModifier}, pure white background, no text, isolated object, high quality, digital art, sticker design, die-cut sticker`;
 
   try {
     const results: string[] = [];
