@@ -17,12 +17,15 @@ const STYLES = [
 export default function CreatePage() {
   const [prompt, setPrompt] = useState("");
   const [style, setStyle] = useState("kawaii");
+  const [count, setCount] = useState(1);
   const [gallery, setGallery] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [showUpgrade, setShowUpgrade] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [checkingAuth, setCheckingAuth] = useState(true);
+  const [remaining, setRemaining] = useState<number | null>(null);
+  const [dailyLimit, setDailyLimit] = useState<number | null>(null);
 
   const supabase = createClient();
 
@@ -59,7 +62,7 @@ export default function CreatePage() {
       const response = await fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt: prompt.trim(), style, count: 1 }),
+        body: JSON.stringify({ prompt: prompt.trim(), style, count }),
       });
 
       const data = await response.json();
@@ -67,18 +70,22 @@ export default function CreatePage() {
       if (!response.ok) {
         if (data.upgrade) setShowUpgrade(true);
         setError(data.error || "เกิดข้อผิดพลาด ลองใหม่อีกครั้ง");
+        if (data.remaining !== undefined) setRemaining(data.remaining);
+        if (data.dailyLimit !== undefined) setDailyLimit(data.dailyLimit);
         return;
       }
 
       if (data.images?.length > 0) {
         setGallery((prev) => [...data.images, ...prev]);
       }
+      if (data.remaining !== undefined) setRemaining(data.remaining);
+      if (data.dailyLimit !== undefined) setDailyLimit(data.dailyLimit);
     } catch {
       setError("ไม่สามารถเชื่อมต่อได้ ลองใหม่อีกครั้ง");
     } finally {
       setLoading(false);
     }
-  }, [prompt, style, user]);
+  }, [prompt, style, count, user]);
 
   async function handleDownload(imageUrl: string, index: number) {
     try {
@@ -122,7 +129,10 @@ export default function CreatePage() {
   if (checkingAuth) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-background">
-        <div className="animate-pulse text-muted">กำลังโหลด...</div>
+        <div className="text-center space-y-4">
+          <div className="text-5xl animate-bounce-soft">🎨</div>
+          <div className="animate-pulse text-muted text-sm">กำลังโหลด...</div>
+        </div>
       </div>
     );
   }
@@ -214,6 +224,39 @@ export default function CreatePage() {
               </div>
             </div>
 
+            {/* Batch Count */}
+            <div>
+              <label className="block text-xs font-semibold text-foreground mb-2">
+                จำนวนรูป
+                {remaining !== null && dailyLimit !== null && (
+                  <span className="ml-2 text-muted font-normal">
+                    (เหลือ {remaining}/{dailyLimit} วันนี้)
+                  </span>
+                )}
+              </label>
+              <div className="flex gap-2">
+                {[1, 2, 3, 4].map((n) => (
+                  <button
+                    key={n}
+                    onClick={() => setCount(n)}
+                    disabled={n > 2 && !showUpgrade && remaining !== null && remaining < n}
+                    className={`flex-1 py-2 rounded-xl text-sm font-bold transition-all border ${
+                      count === n
+                        ? "bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white border-transparent shadow-md"
+                        : "bg-card border-card-border text-foreground hover:border-fuchsia-400/50"
+                    } ${n > 2 ? "opacity-60 relative" : ""}`}
+                  >
+                    {n}
+                    {n > 2 && (
+                      <span className="absolute -top-1 -right-1 text-[9px] bg-gradient-to-r from-amber-400 to-orange-500 text-white px-1 rounded-full">
+                        Pro
+                      </span>
+                    )}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             {/* Generate */}
             <button
               onClick={handleGenerate}
@@ -226,10 +269,10 @@ export default function CreatePage() {
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                   </svg>
-                  AI กำลังวาด...
+                  AI กำลังวาด {count > 1 ? `${count} รูป` : ""}...
                 </span>
               ) : (
-                "🎨 สร้าง Sticker"
+                `🎨 สร้าง ${count > 1 ? `${count} Stickers` : "Sticker"}`
               )}
             </button>
 
@@ -244,15 +287,15 @@ export default function CreatePage() {
             )}
 
             {showUpgrade && (
-              <div className="rounded-2xl border-2 border-violet-400/30 bg-gradient-to-b from-violet-50 to-fuchsia-50 dark:from-violet-500/10 dark:to-fuchsia-500/10 p-5 text-center space-y-3">
-                <p className="text-2xl">🚀</p>
+              <div className="animate-scale-in rounded-2xl border-2 border-violet-400/30 bg-gradient-to-b from-violet-50 to-fuchsia-50 dark:from-violet-500/10 dark:to-fuchsia-500/10 p-5 text-center space-y-3">
+                <p className="text-2xl animate-bounce-soft">🚀</p>
                 <h3 className="text-sm font-bold">อัปเกรดเป็น Pro</h3>
                 <p className="text-xs text-muted">
-                  สร้างไม่จำกัด เพียง ฿199/เดือน
+                  สร้าง 30 รูป/วัน เพียง ฿199/เดือน
                 </p>
                 <button
                   onClick={handleUpgrade}
-                  className="rounded-full bg-gradient-to-r from-violet-500 to-fuchsia-500 px-5 py-2 text-xs font-semibold text-white hover:opacity-90 transition-opacity"
+                  className="rounded-full bg-gradient-to-r from-violet-500 to-fuchsia-500 px-5 py-2 text-xs font-semibold text-white hover:scale-105 hover:shadow-lg hover:shadow-violet-500/30 transition-all"
                 >
                   อัปเกรด Pro ✨
                 </button>
@@ -287,20 +330,26 @@ export default function CreatePage() {
               )}
             </div>
 
+            {/* Ad slot - top of gallery */}
+            <div className="ad-slot ad-slot-banner mb-4" data-ad-slot="create-top">
+              <span className="text-xs text-muted/40 select-none">Ad Space</span>
+            </div>
+
             {gallery.length === 0 && !loading ? (
-              <div className="flex items-center justify-center h-72 rounded-2xl border-2 border-dashed border-card-border bg-card/50">
-                <div className="text-center space-y-3">
-                  <p className="text-5xl">🎨</p>
+              <div className="flex items-center justify-center h-72 rounded-2xl border-2 border-dashed border-card-border bg-card/50 decoration-dots">
+                <div className="text-center space-y-3 animate-fade-in">
+                  <p className="text-5xl animate-float">🎨</p>
                   <p className="text-sm text-muted">พิมพ์อะไรสักอย่างแล้วกด Generate</p>
-                  <p className="text-xs text-muted/60">Sticker จะแสดงตรงนี้</p>
+                  <p className="text-xs text-muted/60">Sticker จะแสดงตรงนี้ ✨</p>
                 </div>
               </div>
             ) : (
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 {loading && (
-                  <div className="aspect-square rounded-2xl border-2 border-dashed border-violet-300 dark:border-violet-700 bg-violet-50 dark:bg-violet-500/5 flex items-center justify-center">
-                    <div className="text-center space-y-2">
-                      <div className="inline-block animate-spin h-7 w-7 border-3 border-violet-500 border-t-transparent rounded-full" />
+                  <div className="aspect-square rounded-2xl border-2 border-dashed border-violet-300 dark:border-violet-700 bg-violet-50 dark:bg-violet-500/5 flex items-center justify-center animate-scale-in">
+                    <div className="text-center space-y-3">
+                      <div className="text-3xl animate-bounce-soft">✨</div>
+                      <div className="inline-block animate-spin h-5 w-5 border-2 border-violet-500 border-t-transparent rounded-full" />
                       <p className="text-[11px] text-violet-600 dark:text-violet-400 font-medium">กำลังสร้าง...</p>
                     </div>
                   </div>
@@ -308,12 +357,13 @@ export default function CreatePage() {
                 {gallery.map((img, idx) => (
                   <div
                     key={`${img}-${idx}`}
-                    className="group relative aspect-square rounded-2xl border border-card-border overflow-hidden bg-white dark:bg-zinc-900 hover:shadow-lg hover:shadow-violet-500/10 hover:border-violet-400 dark:hover:border-violet-600 transition-all"
+                    className="gallery-item group relative aspect-square rounded-2xl border border-card-border overflow-hidden bg-white dark:bg-zinc-900 hover:shadow-lg hover:shadow-violet-500/10 hover:border-violet-400 dark:hover:border-violet-600 hover:scale-[1.03] transition-all"
+                    style={{ animationDelay: `${idx * 0.05}s` }}
                   >
                     <img
                       src={img}
                       alt={`Sticker ${idx + 1}`}
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-cover transition-transform group-hover:scale-110"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-center pb-3 gap-2">
                       <button
@@ -333,6 +383,11 @@ export default function CreatePage() {
                 ))}
               </div>
             )}
+
+            {/* Ad slot - bottom of gallery */}
+            <div className="ad-slot ad-slot-banner mt-4" data-ad-slot="create-bottom">
+              <span className="text-xs text-muted/40 select-none">Ad Space</span>
+            </div>
           </div>
         </div>
       </main>

@@ -17,15 +17,21 @@ const STYLE_PROMPTS: Record<string, string> = {
   pixel: "pixel art sticker, crisp 16-bit retro style, limited color palette, sharp pixel edges, no anti-aliasing, consistent retro game sprite look",
 };
 
-const FREE_DAILY_LIMIT = 999;
+const FREE_DAILY_LIMIT = 3;
+const PRO_DAILY_LIMIT = 30;
+const MAX_ACCOUNTS_PER_IP = 3;
 const DELAY_BETWEEN_REQUESTS_MS = 8000;
 
-// Detect if text contains non-ASCII (Thai, Japanese, etc.)
 const NON_LATIN_PATTERN = /[^\u0000-\u007F]/;
 
-async function enhancePrompt(text: string, styleName: string): Promise<string> {
+// Generate multiple varied prompts for batch generation
+async function generateVariedPrompts(
+  text: string,
+  styleName: string,
+  batchCount: number
+): Promise<string[]> {
   const groqKey = process.env.GROQ_API_KEY;
-  if (!groqKey) return text;
+  if (!groqKey) return Array(batchCount).fill(text);
 
   try {
     const needsTranslation = NON_LATIN_PATTERN.test(text);
@@ -43,44 +49,88 @@ async function enhancePrompt(text: string, styleName: string): Promise<string> {
             role: "system",
             content: `You are a sticker prompt engineer. Your job:
 1. ${needsTranslation ? "Translate the input to English." : "Keep the English input as-is."}
-2. Rewrite it as a detailed, specific image generation prompt for a "${styleName}" style sticker.
-3. Include specific details about the subject: pose, expression, colors, props.
-4. Keep the description under 60 words.
-5. Output ONLY the prompt text, nothing else.
+2. Generate exactly ${batchCount} different prompt variation(s) for a "${styleName}" style sticker.
+3. Each variation should depict the SAME subject but with DIFFERENT: pose, expression, angle, action, or mood.
+4. Keep each prompt under 60 words, detailed and specific.
+5. Output as a JSON array of strings ONLY. No markdown, no explanation.
 
 Example input: "orange cat eating ramen"
-Example output: "a chubby orange tabby cat sitting upright, happily slurping ramen noodles from a white bowl with chopsticks, eyes closed with joy, steam rising, warm orange fur with darker stripes"`,
+Example output for 3 variations:
+["a chubby orange tabby cat sitting upright, happily slurping ramen from a bowl with chopsticks, eyes closed with joy, steam rising","an orange tabby cat lying on its belly, licking lips after finishing ramen, empty bowl beside it, satisfied sleepy expression","a playful orange tabby cat standing on hind legs, holding a ramen bowl above its head triumphantly, big sparkling eyes"]`,
           },
           { role: "user", content: text },
         ],
-        temperature: 0.2,
-        max_tokens: 200,
+        temperature: 0.7,
+        max_tokens: 600,
       }),
     });
 
     if (!response.ok) {
       console.error("Groq enhance error:", response.status);
-      return NON_LATIN_PATTERN.test(text) ? text : text;
+      return Array(batchCount).fill(text);
     }
 
     const data = await response.json();
-    const enhanced = data.choices?.[0]?.message?.content?.trim();
-    return enhanced || text;
+    const content = data.choices?.[0]?.message?.content?.trim();
+    if (!content) return Array(batchCount).fill(text);
+
+    const jsonMatch = content.match(/\[[\s\S]*\]/);
+    if (!jsonMatch) return Array(batchCount).fill(content);
+
+    const prompts: string[] = JSON.parse(jsonMatch[0]);
+    while (prompts.length < batchCount) prompts.push(prompts[0] || text);
+    return prompts.slice(0, batchCount);
   } catch (error) {
-    console.error("Prompt enhancement failed:", error);
-    return text;
+    console.error("Prompt generation failed:", error);
+    return Array(batchCount).fill(text);
   }
 }
 
 export async function POST(request: NextRequest) {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   if (!user) {
     return NextResponse.json(
       { error: "กรุณาเข้าสู่ระบบก่อนสร้าง Sticker" },
       { status: 401 }
     );
+  }
+
+  // --- IP-based account limiting ---
+  const forwarded = request.headers.get("x-forwarded-for");
+  const clientIp =
+    forwarded?.split(",")[0]?.trim() ||
+    request.headers.get("x-real-ip") ||
+    "unknown";
+
+  if (
+    clientIp !== "unknown" &&
+    clientIp !== "127.0.0.1" &&
+    clientIp !== "::1"
+  ) {
+    const oneDayAgo = new Date(Date.now() - 86400000).toISOString();
+    const { data: recentGens } = await supabaseAdmin
+      .from("generations")
+      .select("user_id, client_ip")
+      .eq("client_ip", clientIp)
+      .gte("created_at", oneDayAgo);
+
+    if (recentGens) {
+      const uniqueUsers = new Set(recentGens.map((g) => g.user_id));
+      uniqueUsers.add(user.id);
+      if (uniqueUsers.size > MAX_ACCOUNTS_PER_IP) {
+        return NextResponse.json(
+          {
+            error:
+              "IP นี้มีผู้ใช้งานเกินจำนวนที่กำหนด กรุณาติดต่อทีมงาน",
+          },
+          { status: 403 }
+        );
+      }
+    }
   }
 
   // Check if user is Pro
@@ -91,22 +141,31 @@ export async function POST(request: NextRequest) {
     .single();
 
   const isPro = profile?.is_pro === true;
+  const dailyLimit = isPro ? PRO_DAILY_LIMIT : FREE_DAILY_LIMIT;
 
-  // Check daily usage for free users
-  if (!isPro) {
-    const today = new Date().toISOString().split("T")[0];
-    const { count } = await supabase
-      .from("generations")
-      .select("*", { count: "exact", head: true })
-      .eq("user_id", user.id)
-      .gte("created_at", `${today}T00:00:00`);
+  // Check daily usage (sum the count column = total images generated)
+  const today = new Date().toISOString().split("T")[0];
+  const { data: todayGens } = await supabase
+    .from("generations")
+    .select("count")
+    .eq("user_id", user.id)
+    .gte("created_at", `${today}T00:00:00`);
 
-    if ((count ?? 0) >= FREE_DAILY_LIMIT) {
-      return NextResponse.json(
-        { error: `ครบโควต้าฟรี ${FREE_DAILY_LIMIT} ครั้ง/วัน อัปเกรด Pro เพื่อสร้างไม่จำกัด!`, upgrade: true },
-        { status: 429 }
-      );
-    }
+  const currentUsage =
+    todayGens?.reduce((sum, g) => sum + (g.count || 0), 0) ?? 0;
+
+  if (currentUsage >= dailyLimit) {
+    return NextResponse.json(
+      {
+        error: isPro
+          ? `ครบโควต้า Pro ${PRO_DAILY_LIMIT} รูป/วัน พรุ่งนี้สร้างต่อได้เลย!`
+          : `ครบโควต้าฟรี ${FREE_DAILY_LIMIT} รูป/วัน อัปเกรด Pro เพื่อสร้าง ${PRO_DAILY_LIMIT} รูป/วัน!`,
+        upgrade: !isPro,
+        remaining: 0,
+        dailyLimit,
+      },
+      { status: 429 }
+    );
   }
 
   const { prompt, style, count } = await request.json();
@@ -118,21 +177,35 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const stickerCount = Math.min(Math.max(Number(count) || 4, 1), isPro ? 8 : 4);
+  // Clamp batch count: free=1-2, pro=1-4, never exceed remaining quota
+  const remaining = dailyLimit - currentUsage;
+  const maxBatch = isPro ? 4 : 2;
+  const stickerCount = Math.min(
+    Math.max(Number(count) || 1, 1),
+    maxBatch,
+    remaining
+  );
+
   const styleModifier = STYLE_PROMPTS[style] || STYLE_PROMPTS.kawaii;
 
-  // Enhance + translate prompt via Groq for better & more consistent results
-  const enhancedPrompt = await enhancePrompt(prompt, style || "kawaii");
-
-  const fullPrompt = `A sticker of ${enhancedPrompt}, ${styleModifier}, pure white background, no text, isolated object, high quality, digital art, sticker design, die-cut sticker`;
+  // Generate varied prompts for each image in the batch
+  const variedPrompts = await generateVariedPrompts(
+    prompt,
+    style || "kawaii",
+    stickerCount
+  );
 
   try {
     const results: string[] = [];
 
     for (let i = 0; i < stickerCount; i++) {
       if (i > 0) {
-        await new Promise((resolve) => setTimeout(resolve, DELAY_BETWEEN_REQUESTS_MS));
+        await new Promise((resolve) =>
+          setTimeout(resolve, DELAY_BETWEEN_REQUESTS_MS)
+        );
       }
+
+      const fullPrompt = `A sticker of ${variedPrompts[i]}, ${styleModifier}, pure white background, no text, isolated object, high quality, digital art, sticker design, die-cut sticker`;
 
       const prediction = await replicate.predictions.create({
         model: "black-forest-labs/flux-schnell",
@@ -147,7 +220,10 @@ export async function POST(request: NextRequest) {
 
       const finalPrediction = await replicate.wait(prediction);
 
-      if (finalPrediction.output && Array.isArray(finalPrediction.output)) {
+      if (
+        finalPrediction.output &&
+        Array.isArray(finalPrediction.output)
+      ) {
         for (const item of finalPrediction.output) {
           if (typeof item === "string") {
             results.push(item);
@@ -180,7 +256,7 @@ export async function POST(request: NextRequest) {
 
         if (uploadError) {
           console.error("Storage upload error:", uploadError.message);
-          permanentUrls.push(replicateUrl); // fallback to temp URL
+          permanentUrls.push(replicateUrl);
         } else {
           const { data: urlData } = supabaseAdmin.storage
             .from("stickers")
@@ -188,25 +264,40 @@ export async function POST(request: NextRequest) {
           permanentUrls.push(urlData.publicUrl);
         }
       } catch {
-        permanentUrls.push(replicateUrl); // fallback to temp URL
+        permanentUrls.push(replicateUrl);
       }
     }
 
-    // Log generation for usage tracking
-    await supabase.from("generations").insert({
+    // Log generation for usage tracking with IP
+    const insertData: Record<string, unknown> = {
       user_id: user.id,
       prompt,
       style,
       count: results.length,
       is_pro: isPro,
-    });
+    };
+    // Only include client_ip if column exists (added via SQL migration)
+    if (clientIp !== "unknown") {
+      insertData.client_ip = clientIp;
+    }
 
-    return NextResponse.json({ images: permanentUrls, isPro });
+    await supabase.from("generations").insert(insertData);
+
+    return NextResponse.json({
+      images: permanentUrls,
+      isPro,
+      remaining: remaining - results.length,
+      dailyLimit,
+    });
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
     console.error("Replicate API error:", errorMessage);
 
-    if (errorMessage.includes("429") || errorMessage.includes("throttled")) {
+    if (
+      errorMessage.includes("429") ||
+      errorMessage.includes("throttled")
+    ) {
       return NextResponse.json(
         { error: "คำขอถี่เกินไป รอสักครู่แล้วลองใหม่" },
         { status: 429 }
