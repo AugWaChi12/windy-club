@@ -1,25 +1,22 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import type { User } from "@supabase/supabase-js";
 
 const STYLES = [
-  { id: "kawaii", label: "Kawaii", emoji: "🌸" },
-  { id: "anime", label: "Anime", emoji: "⚔️" },
-  { id: "comic", label: "Comic", emoji: "💥" },
-  { id: "minimal", label: "Minimal", emoji: "◽" },
-  { id: "pixel", label: "Pixel", emoji: "👾" },
+  { id: "kawaii", label: "Kawaii", emoji: "🌸", desc: "น่ารัก ชิบิ พาสเทล" },
+  { id: "anime", label: "Anime", emoji: "⚔️", desc: "มังงะ อนิเมะ" },
+  { id: "comic", label: "Comic", emoji: "💥", desc: "การ์ตูนตะวันตก" },
+  { id: "minimal", label: "Minimal", emoji: "◽", desc: "เรียบง่าย สะอาด" },
+  { id: "pixel", label: "Pixel", emoji: "👾", desc: "พิกเซลอาร์ท เรโทร" },
 ];
-
-const COUNTS = [2, 4, 6, 8];
 
 export default function CreatePage() {
   const [prompt, setPrompt] = useState("");
   const [style, setStyle] = useState("kawaii");
-  const [count, setCount] = useState(4);
-  const [images, setImages] = useState<string[]>([]);
+  const [gallery, setGallery] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [showUpgrade, setShowUpgrade] = useState(false);
@@ -29,13 +26,13 @@ export default function CreatePage() {
   const supabase = createClient();
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      setUser(user);
+    supabase.auth.getUser().then(({ data: { user: authUser } }) => {
+      setUser(authUser);
       setCheckingAuth(false);
     });
-  }, []);
+  }, [supabase.auth]);
 
-  async function handleGenerate() {
+  const handleGenerate = useCallback(async () => {
     if (!prompt.trim()) return;
     if (!user) {
       window.location.href = "/login";
@@ -45,33 +42,31 @@ export default function CreatePage() {
     setLoading(true);
     setError("");
     setShowUpgrade(false);
-    setImages([]);
 
     try {
       const response = await fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt: prompt.trim(), style, count }),
+        body: JSON.stringify({ prompt: prompt.trim(), style, count: 1 }),
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        const errData = data;
-        if (errData.upgrade) {
-          setShowUpgrade(true);
-        }
-        setError(errData.error || "เกิดข้อผิดพลาด ลองใหม่อีกครั้ง");
+        if (data.upgrade) setShowUpgrade(true);
+        setError(data.error || "เกิดข้อผิดพลาด ลองใหม่อีกครั้ง");
         return;
       }
 
-      setImages(data.images);
+      if (data.images?.length > 0) {
+        setGallery((prev) => [...data.images, ...prev]);
+      }
     } catch {
       setError("ไม่สามารถเชื่อมต่อได้ ลองใหม่อีกครั้ง");
     } finally {
       setLoading(false);
     }
-  }
+  }, [prompt, style, user]);
 
   async function handleDownload(imageUrl: string, index: number) {
     try {
@@ -79,31 +74,26 @@ export default function CreatePage() {
       const response = await fetch(proxyUrl);
       const blob = await response.blob();
       const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `windy-sticker-${index + 1}.png`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = `windy-sticker-${index + 1}.png`;
+      document.body.appendChild(anchor);
+      anchor.click();
+      document.body.removeChild(anchor);
       URL.revokeObjectURL(url);
     } catch {
       alert("ดาวน์โหลดไม่สำเร็จ ลองคลิกขวาแล้ว Save Image");
     }
   }
 
-  async function handleDownloadAll() {
-    for (let i = 0; i < images.length; i++) {
-      await handleDownload(images[i], i);
-      await new Promise((resolve) => setTimeout(resolve, 500));
-    }
+  function handleRemove(index: number) {
+    setGallery((prev) => prev.filter((_, i) => i !== index));
   }
 
   async function handleUpgrade() {
     const response = await fetch("/api/checkout", { method: "POST" });
     const data = await response.json();
-    if (data.url) {
-      window.location.href = data.url;
-    }
+    if (data.url) window.location.href = data.url;
   }
 
   async function handleLogout() {
@@ -114,169 +104,201 @@ export default function CreatePage() {
   if (checkingAuth) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <p className="text-zinc-500">กำลังโหลด...</p>
+        <div className="animate-pulse text-zinc-400">กำลังโหลด...</div>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col min-h-screen">
-      <header className="flex items-center justify-between px-6 py-4 border-b border-zinc-200 dark:border-zinc-800">
-        <Link href="/" className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-500 bg-clip-text text-transparent">
-          Windy Club
-        </Link>
-        <div className="flex items-center gap-3">
-          {user ? (
-            <>
-              <span className="text-sm text-zinc-500">{user.email}</span>
-              <button
-                onClick={handleLogout}
-                className="text-sm text-zinc-400 hover:text-zinc-600"
-              >
-                ออกจากระบบ
-              </button>
-            </>
-          ) : (
-            <Link href="/login" className="rounded-full bg-purple-600 px-4 py-2 text-sm font-medium text-white hover:bg-purple-700">
-              เข้าสู่ระบบ
-            </Link>
-          )}
+    <div className="flex flex-col min-h-screen bg-zinc-950">
+      {/* Header */}
+      <header className="sticky top-0 z-50 backdrop-blur-lg bg-zinc-950/80 border-b border-zinc-800">
+        <div className="max-w-6xl mx-auto flex items-center justify-between px-4 py-3">
+          <Link href="/" className="text-lg font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+            ✨ Windy Club
+          </Link>
+          <div className="flex items-center gap-3">
+            {user ? (
+              <>
+                <span className="text-xs text-zinc-500 hidden sm:block">{user.email}</span>
+                <button
+                  onClick={handleLogout}
+                  className="text-xs text-zinc-500 hover:text-zinc-300 transition-colors"
+                >
+                  ออก
+                </button>
+              </>
+            ) : (
+              <Link href="/login" className="rounded-full bg-purple-600 px-4 py-1.5 text-xs font-medium text-white hover:bg-purple-500">
+                เข้าสู่ระบบ
+              </Link>
+            )}
+          </div>
         </div>
       </header>
 
-      <main className="flex-1 max-w-4xl mx-auto w-full px-6 py-10">
-        <h1 className="text-3xl font-bold mb-8">สร้าง Sticker ✨</h1>
+      <main className="flex-1 max-w-6xl mx-auto w-full px-4 py-6">
+        <div className="grid grid-cols-1 lg:grid-cols-[340px_1fr] gap-6">
 
-        {/* Prompt Input */}
-        <div className="space-y-6">
-          <div>
-            <label className="block text-sm font-medium mb-2">
-              อธิบาย Sticker ที่อยากได้
-            </label>
-            <input
-              type="text"
-              value={prompt}
-              onChange={(e) => setPrompt(e.target.value)}
-              placeholder="เช่น แมวส้มอ้วนๆ น่ารัก, หมาชิบะยิ้ม, แพนด้ากินไผ่..."
-              className="w-full rounded-xl border border-zinc-300 dark:border-zinc-700 px-4 py-3 text-base bg-white dark:bg-zinc-900 focus:outline-none focus:ring-2 focus:ring-purple-500"
-              maxLength={200}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !loading) handleGenerate();
-              }}
-            />
-            <p className="mt-1 text-xs text-zinc-400">{prompt.length}/200</p>
-          </div>
-
-          {/* Style Selection */}
-          <div>
-            <label className="block text-sm font-medium mb-2">เลือก Style</label>
-            <div className="flex flex-wrap gap-2">
-              {STYLES.map((s) => (
-                <button
-                  key={s.id}
-                  onClick={() => setStyle(s.id)}
-                  className={`px-4 py-2 rounded-full border text-sm font-medium transition-colors ${
-                    style === s.id
-                      ? "border-purple-500 bg-purple-50 dark:bg-purple-950 text-purple-700 dark:text-purple-300"
-                      : "border-zinc-300 dark:border-zinc-700 hover:border-purple-300"
-                  }`}
-                >
-                  {s.emoji} {s.label}
-                </button>
-              ))}
+          {/* Left Panel - Controls */}
+          <div className="space-y-5">
+            <div>
+              <h1 className="text-2xl font-bold text-white mb-1">สร้าง Sticker</h1>
+              <p className="text-sm text-zinc-500">พิมพ์อะไรก็ได้ AI จะสร้างให้</p>
             </div>
-          </div>
 
-          {/* Count Selection */}
-          <div>
-            <label className="block text-sm font-medium mb-2">จำนวน Sticker</label>
-            <div className="flex gap-2">
-              {COUNTS.map((c) => (
-                <button
-                  key={c}
-                  onClick={() => setCount(c)}
-                  className={`px-4 py-2 rounded-full border text-sm font-medium transition-colors ${
-                    count === c
-                      ? "border-purple-500 bg-purple-50 dark:bg-purple-950 text-purple-700 dark:text-purple-300"
-                      : "border-zinc-300 dark:border-zinc-700 hover:border-purple-300"
-                  }`}
-                >
-                  {c} ตัว
-                </button>
-              ))}
+            {/* Prompt */}
+            <div>
+              <textarea
+                value={prompt}
+                onChange={(e) => setPrompt(e.target.value)}
+                placeholder="เช่น แมวส้มอ้วนๆ กำลังกินราเมน..."
+                className="w-full h-24 rounded-xl border border-zinc-700 bg-zinc-900 px-4 py-3 text-sm text-white placeholder-zinc-600 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"
+                maxLength={200}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey && !loading) {
+                    e.preventDefault();
+                    handleGenerate();
+                  }
+                }}
+              />
+              <p className="mt-1 text-right text-xs text-zinc-600">{prompt.length}/200</p>
             </div>
-          </div>
 
-          {/* Generate Button */}
-          <button
-            onClick={handleGenerate}
-            disabled={loading || !prompt.trim()}
-            className="w-full rounded-xl bg-purple-600 px-6 py-3 text-lg font-semibold text-white hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {loading ? (
-              <span className="flex items-center justify-center gap-2">
-                <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                </svg>
-                กำลังสร้าง... (รอสักครู่)
-              </span>
-            ) : (
-              "🎨 สร้าง Sticker"
-            )}
-          </button>
-
-          {error && (
-            <p className="text-red-500 text-sm text-center">{error}</p>
-          )}
-
-          {showUpgrade && (
-            <div className="rounded-xl border-2 border-purple-500 bg-purple-50 dark:bg-purple-950/30 p-6 text-center space-y-3">
-              <h3 className="text-lg font-bold">🚀 อัปเกรดเป็น Pro</h3>
-              <p className="text-sm text-zinc-600 dark:text-zinc-400">
-                สร้าง Sticker ไม่จำกัด ไม่มี watermark เพียง ฿199/เดือน
-              </p>
-              <button
-                onClick={handleUpgrade}
-                className="rounded-full bg-purple-600 px-6 py-2 text-sm font-semibold text-white hover:bg-purple-700 transition-colors"
-              >
-                อัปเกรด Pro — ฿199/เดือน
-              </button>
-            </div>
-          )}
-        </div>
-
-        {/* Results */}
-        {images.length > 0 && (
-          <div className="mt-10 space-y-4">
-            <div className="flex items-center justify-between">
-              <h2 className="text-xl font-bold">Sticker ของคุณ 🎉</h2>
-              <button
-                onClick={handleDownloadAll}
-                className="text-sm font-medium text-purple-600 hover:text-purple-700"
-              >
-                ⬇️ ดาวน์โหลดทั้งหมด
-              </button>
-            </div>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-              {images.map((img, idx) => (
-                <div key={idx} className="group relative aspect-square rounded-xl border border-zinc-200 dark:border-zinc-800 overflow-hidden bg-white">
-                  <img
-                    src={img}
-                    alt={`Sticker ${idx + 1}`}
-                    className="w-full h-full object-cover"
-                  />
+            {/* Style */}
+            <div>
+              <p className="text-xs font-medium text-zinc-400 mb-2 uppercase tracking-wider">Style</p>
+              <div className="grid grid-cols-2 gap-2">
+                {STYLES.map((s) => (
                   <button
-                    onClick={() => handleDownload(img, idx)}
-                    className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-black/70 text-white text-xs px-3 py-1 rounded-full"
+                    key={s.id}
+                    onClick={() => setStyle(s.id)}
+                    className={`flex items-center gap-2 px-3 py-2.5 rounded-lg border text-left transition-all ${
+                      style === s.id
+                        ? "border-purple-500 bg-purple-500/10 ring-1 ring-purple-500/50"
+                        : "border-zinc-800 bg-zinc-900 hover:border-zinc-600"
+                    }`}
                   >
-                    ⬇️ Save
+                    <span className="text-lg">{s.emoji}</span>
+                    <div>
+                      <p className={`text-xs font-medium ${style === s.id ? "text-purple-300" : "text-zinc-300"}`}>{s.label}</p>
+                      <p className="text-[10px] text-zinc-600">{s.desc}</p>
+                    </div>
                   </button>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
+
+            {/* Generate Button */}
+            <button
+              onClick={handleGenerate}
+              disabled={loading || !prompt.trim()}
+              className="w-full rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 px-6 py-3.5 text-sm font-bold text-white hover:from-purple-500 hover:to-pink-500 transition-all disabled:opacity-40 disabled:cursor-not-allowed shadow-lg shadow-purple-500/20"
+            >
+              {loading ? (
+                <span className="flex items-center justify-center gap-2">
+                  <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                  </svg>
+                  AI กำลังวาด...
+                </span>
+              ) : (
+                "🎨 สร้าง Sticker"
+              )}
+            </button>
+
+            {/* Tip */}
+            <p className="text-[11px] text-zinc-600 text-center">
+              กด Generate ซ้ำได้เรื่อยๆ — ได้ผลลัพธ์ต่างกันทุกครั้ง
+            </p>
+
+            {error && (
+              <div className="rounded-lg bg-red-500/10 border border-red-500/20 px-4 py-3">
+                <p className="text-red-400 text-xs">{error}</p>
+              </div>
+            )}
+
+            {showUpgrade && (
+              <div className="rounded-xl border border-purple-500/30 bg-gradient-to-b from-purple-500/10 to-pink-500/10 p-5 text-center space-y-3">
+                <p className="text-lg">🚀</p>
+                <h3 className="text-sm font-bold text-white">อัปเกรดเป็น Pro</h3>
+                <p className="text-xs text-zinc-400">
+                  สร้างไม่จำกัด เพียง ฿199/เดือน
+                </p>
+                <button
+                  onClick={handleUpgrade}
+                  className="rounded-full bg-purple-600 px-5 py-2 text-xs font-semibold text-white hover:bg-purple-500 transition-colors"
+                >
+                  อัปเกรด Pro
+                </button>
+              </div>
+            )}
           </div>
-        )}
+
+          {/* Right Panel - Gallery */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-sm font-medium text-zinc-400">
+                {gallery.length > 0 ? `Sticker ของคุณ (${gallery.length})` : "Sticker จะแสดงที่นี่"}
+              </h2>
+              {gallery.length > 0 && (
+                <button
+                  onClick={() => setGallery([])}
+                  className="text-xs text-zinc-600 hover:text-zinc-400 transition-colors"
+                >
+                  ล้างทั้งหมด
+                </button>
+              )}
+            </div>
+
+            {gallery.length === 0 && !loading ? (
+              <div className="flex items-center justify-center h-64 rounded-xl border border-dashed border-zinc-800 bg-zinc-900/50">
+                <div className="text-center space-y-2">
+                  <p className="text-3xl">🎨</p>
+                  <p className="text-sm text-zinc-600">พิมพ์อะไรสักอย่างแล้วกด Generate</p>
+                </div>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                {loading && (
+                  <div className="aspect-square rounded-xl border border-zinc-800 bg-zinc-900 flex items-center justify-center">
+                    <div className="text-center space-y-2">
+                      <div className="inline-block animate-spin h-6 w-6 border-2 border-purple-500 border-t-transparent rounded-full" />
+                      <p className="text-[11px] text-zinc-600">กำลังสร้าง...</p>
+                    </div>
+                  </div>
+                )}
+                {gallery.map((img, idx) => (
+                  <div
+                    key={`${img}-${idx}`}
+                    className="group relative aspect-square rounded-xl border border-zinc-800 overflow-hidden bg-white hover:border-purple-500/50 transition-colors"
+                  >
+                    <img
+                      src={img}
+                      alt={`Sticker ${idx + 1}`}
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-end justify-center pb-3 gap-2">
+                      <button
+                        onClick={() => handleDownload(img, idx)}
+                        className="opacity-0 group-hover:opacity-100 transition-opacity bg-white text-black text-[11px] font-medium px-3 py-1.5 rounded-full shadow-lg"
+                      >
+                        ⬇ Save
+                      </button>
+                      <button
+                        onClick={() => handleRemove(idx)}
+                        className="opacity-0 group-hover:opacity-100 transition-opacity bg-red-500 text-white text-[11px] font-medium px-3 py-1.5 rounded-full shadow-lg"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
       </main>
     </div>
   );
