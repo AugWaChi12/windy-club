@@ -7,6 +7,8 @@ const replicate = new Replicate({
   auth: process.env.REPLICATE_API_TOKEN,
 });
 
+const GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions";
+
 const STYLE_PROMPTS: Record<string, string> = {
   kawaii: "kawaii style, chibi, cute, pastel colors, simple shapes",
   comic: "comic book style, bold lines, vibrant colors, pop art",
@@ -17,6 +19,52 @@ const STYLE_PROMPTS: Record<string, string> = {
 
 const FREE_DAILY_LIMIT = 3;
 const DELAY_BETWEEN_REQUESTS_MS = 8000;
+
+// Detect if text contains non-ASCII (Thai, Japanese, etc.)
+const NON_LATIN_PATTERN = /[^\u0000-\u007F]/;
+
+async function translateToEnglish(text: string): Promise<string> {
+  const groqKey = process.env.GROQ_API_KEY;
+  if (!groqKey) return text;
+
+  // Skip translation if text is already English/ASCII
+  if (!NON_LATIN_PATTERN.test(text)) return text;
+
+  try {
+    const response = await fetch(GROQ_API_URL, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${groqKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "llama-3.3-70b-versatile",
+        messages: [
+          {
+            role: "system",
+            content:
+              "You are a translator. Translate the user's text to English. Output ONLY the English translation, nothing else. Keep it concise and descriptive for image generation.",
+          },
+          { role: "user", content: text },
+        ],
+        temperature: 0.3,
+        max_tokens: 200,
+      }),
+    });
+
+    if (!response.ok) {
+      console.error("Groq translation error:", response.status);
+      return text;
+    }
+
+    const data = await response.json();
+    const translated = data.choices?.[0]?.message?.content?.trim();
+    return translated || text;
+  } catch (error) {
+    console.error("Translation failed:", error);
+    return text;
+  }
+}
 
 export async function POST(request: NextRequest) {
   const supabase = await createClient();
@@ -67,7 +115,10 @@ export async function POST(request: NextRequest) {
   const stickerCount = Math.min(Math.max(Number(count) || 4, 1), isPro ? 8 : 4);
   const styleModifier = STYLE_PROMPTS[style] || STYLE_PROMPTS.kawaii;
 
-  const fullPrompt = `A sticker of ${prompt}, ${styleModifier}, white background, no text, isolated object, high quality, digital art, sticker design`;
+  // Translate non-English prompts to English for better image generation
+  const translatedPrompt = await translateToEnglish(prompt);
+
+  const fullPrompt = `A sticker of ${translatedPrompt}, ${styleModifier}, white background, no text, isolated object, high quality, digital art, sticker design`;
 
   try {
     const results: string[] = [];
