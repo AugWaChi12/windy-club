@@ -3,14 +3,15 @@
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
+import { ThemeToggle } from "@/components/theme-provider";
 import type { User } from "@supabase/supabase-js";
 
 const STYLES = [
-  { id: "kawaii", label: "Kawaii", emoji: "🌸", desc: "น่ารัก ชิบิ พาสเทล" },
-  { id: "anime", label: "Anime", emoji: "⚔️", desc: "มังงะ อนิเมะ" },
-  { id: "comic", label: "Comic", emoji: "💥", desc: "การ์ตูนตะวันตก" },
-  { id: "minimal", label: "Minimal", emoji: "◽", desc: "เรียบง่าย สะอาด" },
-  { id: "pixel", label: "Pixel", emoji: "👾", desc: "พิกเซลอาร์ท เรโทร" },
+  { id: "kawaii", label: "Kawaii", emoji: "🌸", desc: "น่ารัก ชิบิ พาสเทล", color: "from-pink-400 to-rose-400" },
+  { id: "anime", label: "Anime", emoji: "⚔️", desc: "มังงะ อนิเมะ", color: "from-blue-400 to-indigo-400" },
+  { id: "comic", label: "Comic", emoji: "💥", desc: "การ์ตูนตะวันตก", color: "from-amber-400 to-orange-400" },
+  { id: "minimal", label: "Minimal", emoji: "◽", desc: "เรียบง่าย สะอาด", color: "from-gray-400 to-slate-400" },
+  { id: "pixel", label: "Pixel", emoji: "👾", desc: "พิกเซลอาร์ท เรโทร", color: "from-emerald-400 to-teal-400" },
 ];
 
 export default function CreatePage() {
@@ -30,7 +31,6 @@ export default function CreatePage() {
       setUser(authUser);
       setCheckingAuth(false);
 
-      // Load saved stickers from storage
       if (authUser) {
         fetch("/api/stickers")
           .then((res) => res.json())
@@ -101,8 +101,6 @@ export default function CreatePage() {
   function handleRemove(index: number) {
     const imageUrl = gallery[index];
     setGallery((prev) => prev.filter((_, i) => i !== index));
-
-    // Delete from Supabase Storage in background
     fetch("/api/stickers", {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
@@ -123,33 +121,36 @@ export default function CreatePage() {
 
   if (checkingAuth) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-pulse text-zinc-400">กำลังโหลด...</div>
+      <div className="flex items-center justify-center min-h-screen bg-background">
+        <div className="animate-pulse text-muted">กำลังโหลด...</div>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-zinc-950">
+    <div className="flex flex-col min-h-screen bg-background">
       {/* Header */}
-      <header className="sticky top-0 z-50 backdrop-blur-lg bg-zinc-950/80 border-b border-zinc-800">
+      <header className="sticky top-0 z-50 backdrop-blur-xl bg-background/80 border-b border-card-border">
         <div className="max-w-6xl mx-auto flex items-center justify-between px-4 py-3">
-          <Link href="/" className="text-lg font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
-            ✨ Windy Club
+          <Link href="/" className="flex items-center gap-2 text-lg font-bold">
+            <span className="bg-gradient-to-r from-violet-500 via-fuchsia-500 to-pink-500 bg-clip-text text-transparent">
+              ✨ Windy Club
+            </span>
           </Link>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
             {user ? (
               <>
-                <span className="text-xs text-zinc-500 hidden sm:block">{user.email}</span>
+                <span className="text-xs text-muted hidden sm:block">{user.email}</span>
                 <button
                   onClick={handleLogout}
-                  className="text-xs text-zinc-500 hover:text-zinc-300 transition-colors"
+                  className="text-xs text-muted hover:text-foreground transition-colors"
                 >
                   ออก
                 </button>
               </>
             ) : (
-              <Link href="/login" className="rounded-full bg-purple-600 px-4 py-1.5 text-xs font-medium text-white hover:bg-purple-500">
+              <Link href="/login" className="rounded-full bg-gradient-to-r from-violet-500 to-fuchsia-500 px-4 py-1.5 text-xs font-medium text-white hover:opacity-90">
                 เข้าสู่ระบบ
               </Link>
             )}
@@ -158,13 +159,15 @@ export default function CreatePage() {
       </header>
 
       <main className="flex-1 max-w-6xl mx-auto w-full px-4 py-6">
-        <div className="grid grid-cols-1 lg:grid-cols-[340px_1fr] gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-[360px_1fr] gap-8">
 
-          {/* Left Panel - Controls */}
+          {/* Left Panel */}
           <div className="space-y-5">
             <div>
-              <h1 className="text-2xl font-bold text-white mb-1">สร้าง Sticker</h1>
-              <p className="text-sm text-zinc-500">พิมพ์อะไรก็ได้ AI จะสร้างให้</p>
+              <h1 className="text-2xl font-bold mb-1">
+                🎨 สร้าง <span className="bg-gradient-to-r from-violet-500 to-fuchsia-500 bg-clip-text text-transparent">Sticker</span>
+              </h1>
+              <p className="text-sm text-muted">พิมพ์อะไรก็ได้ AI จะสร้างให้ทันที</p>
             </div>
 
             {/* Prompt */}
@@ -173,7 +176,7 @@ export default function CreatePage() {
                 value={prompt}
                 onChange={(e) => setPrompt(e.target.value)}
                 placeholder="เช่น แมวส้มอ้วนๆ กำลังกินราเมน..."
-                className="w-full h-24 rounded-xl border border-zinc-700 bg-zinc-900 px-4 py-3 text-sm text-white placeholder-zinc-600 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"
+                className="w-full h-28 rounded-2xl border border-card-border bg-card px-4 py-3 text-sm text-foreground placeholder-muted focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent resize-none transition-colors"
                 maxLength={200}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && !e.shiftKey && !loading) {
@@ -182,38 +185,40 @@ export default function CreatePage() {
                   }
                 }}
               />
-              <p className="mt-1 text-right text-xs text-zinc-600">{prompt.length}/200</p>
+              <p className="mt-1 text-right text-xs text-muted">{prompt.length}/200</p>
             </div>
 
             {/* Style */}
             <div>
-              <p className="text-xs font-medium text-zinc-400 mb-2 uppercase tracking-wider">Style</p>
+              <p className="text-xs font-semibold text-muted mb-2 uppercase tracking-wider">Style</p>
               <div className="grid grid-cols-2 gap-2">
                 {STYLES.map((s) => (
                   <button
                     key={s.id}
                     onClick={() => setStyle(s.id)}
-                    className={`flex items-center gap-2 px-3 py-2.5 rounded-lg border text-left transition-all ${
+                    className={`flex items-center gap-2.5 px-3 py-3 rounded-xl border text-left transition-all ${
                       style === s.id
-                        ? "border-purple-500 bg-purple-500/10 ring-1 ring-purple-500/50"
-                        : "border-zinc-800 bg-zinc-900 hover:border-zinc-600"
+                        ? "border-violet-500 bg-violet-500/10 dark:bg-violet-500/15 ring-2 ring-violet-500/30 shadow-sm"
+                        : "border-card-border bg-card hover:border-violet-300 dark:hover:border-violet-700 hover:shadow-sm"
                     }`}
                   >
-                    <span className="text-lg">{s.emoji}</span>
+                    <span className={`text-xl w-8 h-8 flex items-center justify-center rounded-lg bg-gradient-to-br ${s.color} text-white text-sm`}>
+                      {s.emoji}
+                    </span>
                     <div>
-                      <p className={`text-xs font-medium ${style === s.id ? "text-purple-300" : "text-zinc-300"}`}>{s.label}</p>
-                      <p className="text-[10px] text-zinc-600">{s.desc}</p>
+                      <p className={`text-xs font-semibold ${style === s.id ? "text-violet-600 dark:text-violet-400" : "text-foreground"}`}>{s.label}</p>
+                      <p className="text-[10px] text-muted">{s.desc}</p>
                     </div>
                   </button>
                 ))}
               </div>
             </div>
 
-            {/* Generate Button */}
+            {/* Generate */}
             <button
               onClick={handleGenerate}
               disabled={loading || !prompt.trim()}
-              className="w-full rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 px-6 py-3.5 text-sm font-bold text-white hover:from-purple-500 hover:to-pink-500 transition-all disabled:opacity-40 disabled:cursor-not-allowed shadow-lg shadow-purple-500/20"
+              className="w-full rounded-2xl bg-gradient-to-r from-violet-500 via-fuchsia-500 to-pink-500 px-6 py-4 text-sm font-bold text-white hover:shadow-lg hover:shadow-fuchsia-500/25 hover:scale-[1.01] transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:shadow-none disabled:hover:scale-100"
             >
               {loading ? (
                 <span className="flex items-center justify-center gap-2">
@@ -228,29 +233,28 @@ export default function CreatePage() {
               )}
             </button>
 
-            {/* Tip */}
-            <p className="text-[11px] text-zinc-600 text-center">
-              กด Generate ซ้ำได้เรื่อยๆ — ได้ผลลัพธ์ต่างกันทุกครั้ง
+            <p className="text-[11px] text-muted text-center">
+              กดซ้ำได้เรื่อยๆ — ได้ผลลัพธ์ต่างกันทุกครั้ง ✨
             </p>
 
             {error && (
-              <div className="rounded-lg bg-red-500/10 border border-red-500/20 px-4 py-3">
-                <p className="text-red-400 text-xs">{error}</p>
+              <div className="rounded-xl bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 px-4 py-3">
+                <p className="text-red-600 dark:text-red-400 text-xs">{error}</p>
               </div>
             )}
 
             {showUpgrade && (
-              <div className="rounded-xl border border-purple-500/30 bg-gradient-to-b from-purple-500/10 to-pink-500/10 p-5 text-center space-y-3">
-                <p className="text-lg">🚀</p>
-                <h3 className="text-sm font-bold text-white">อัปเกรดเป็น Pro</h3>
-                <p className="text-xs text-zinc-400">
+              <div className="rounded-2xl border-2 border-violet-400/30 bg-gradient-to-b from-violet-50 to-fuchsia-50 dark:from-violet-500/10 dark:to-fuchsia-500/10 p-5 text-center space-y-3">
+                <p className="text-2xl">🚀</p>
+                <h3 className="text-sm font-bold">อัปเกรดเป็น Pro</h3>
+                <p className="text-xs text-muted">
                   สร้างไม่จำกัด เพียง ฿199/เดือน
                 </p>
                 <button
                   onClick={handleUpgrade}
-                  className="rounded-full bg-purple-600 px-5 py-2 text-xs font-semibold text-white hover:bg-purple-500 transition-colors"
+                  className="rounded-full bg-gradient-to-r from-violet-500 to-fuchsia-500 px-5 py-2 text-xs font-semibold text-white hover:opacity-90 transition-opacity"
                 >
-                  อัปเกรด Pro
+                  อัปเกรด Pro ✨
                 </button>
               </div>
             )}
@@ -259,13 +263,14 @@ export default function CreatePage() {
           {/* Right Panel - Gallery */}
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <h2 className="text-sm font-medium text-zinc-400">
-                {gallery.length > 0 ? `Sticker ของคุณ (${gallery.length})` : "Sticker จะแสดงที่นี่"}
+              <h2 className="text-sm font-semibold text-muted">
+                {gallery.length > 0 ? (
+                  <>🖼 Sticker ของคุณ <span className="inline-flex items-center justify-center bg-violet-100 dark:bg-violet-500/20 text-violet-700 dark:text-violet-300 rounded-full px-2 py-0.5 text-[10px] font-bold ml-1">{gallery.length}</span></>
+                ) : "Sticker จะแสดงที่นี่"}
               </h2>
               {gallery.length > 0 && (
                 <button
                   onClick={() => {
-                    // Delete all from storage in background
                     for (const url of gallery) {
                       fetch("/api/stickers", {
                         method: "DELETE",
@@ -275,50 +280,51 @@ export default function CreatePage() {
                     }
                     setGallery([]);
                   }}
-                  className="text-xs text-zinc-600 hover:text-zinc-400 transition-colors"
+                  className="text-xs text-muted hover:text-red-500 transition-colors"
                 >
-                  ล้างทั้งหมด
+                  🗑 ล้างทั้งหมด
                 </button>
               )}
             </div>
 
             {gallery.length === 0 && !loading ? (
-              <div className="flex items-center justify-center h-64 rounded-xl border border-dashed border-zinc-800 bg-zinc-900/50">
-                <div className="text-center space-y-2">
-                  <p className="text-3xl">🎨</p>
-                  <p className="text-sm text-zinc-600">พิมพ์อะไรสักอย่างแล้วกด Generate</p>
+              <div className="flex items-center justify-center h-72 rounded-2xl border-2 border-dashed border-card-border bg-card/50">
+                <div className="text-center space-y-3">
+                  <p className="text-5xl">🎨</p>
+                  <p className="text-sm text-muted">พิมพ์อะไรสักอย่างแล้วกด Generate</p>
+                  <p className="text-xs text-muted/60">Sticker จะแสดงตรงนี้</p>
                 </div>
               </div>
             ) : (
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 {loading && (
-                  <div className="aspect-square rounded-xl border border-zinc-800 bg-zinc-900 flex items-center justify-center">
+                  <div className="aspect-square rounded-2xl border-2 border-dashed border-violet-300 dark:border-violet-700 bg-violet-50 dark:bg-violet-500/5 flex items-center justify-center">
                     <div className="text-center space-y-2">
-                      <div className="inline-block animate-spin h-6 w-6 border-2 border-purple-500 border-t-transparent rounded-full" />
-                      <p className="text-[11px] text-zinc-600">กำลังสร้าง...</p>
+                      <div className="inline-block animate-spin h-7 w-7 border-3 border-violet-500 border-t-transparent rounded-full" />
+                      <p className="text-[11px] text-violet-600 dark:text-violet-400 font-medium">กำลังสร้าง...</p>
                     </div>
                   </div>
                 )}
                 {gallery.map((img, idx) => (
                   <div
                     key={`${img}-${idx}`}
-                    className="group relative aspect-square rounded-xl border border-zinc-800 overflow-hidden bg-white hover:border-purple-500/50 transition-colors"
+                    className="group relative aspect-square rounded-2xl border border-card-border overflow-hidden bg-white dark:bg-zinc-900 hover:shadow-lg hover:shadow-violet-500/10 hover:border-violet-400 dark:hover:border-violet-600 transition-all"
                   >
                     <img
                       src={img}
                       alt={`Sticker ${idx + 1}`}
                       className="w-full h-full object-cover"
                     />
-                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-end justify-center pb-3 gap-2">
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-center pb-3 gap-2">
                       <button
                         onClick={() => handleDownload(img, idx)}
-                        className="opacity-0 group-hover:opacity-100 transition-opacity bg-white text-black text-[11px] font-medium px-3 py-1.5 rounded-full shadow-lg"
+                        className="opacity-0 group-hover:opacity-100 transition-all translate-y-1 group-hover:translate-y-0 bg-white text-black text-[11px] font-semibold px-3 py-1.5 rounded-full shadow-lg hover:bg-violet-50"
                       >
                         ⬇ Save
                       </button>
                       <button
                         onClick={() => handleRemove(idx)}
-                        className="opacity-0 group-hover:opacity-100 transition-opacity bg-red-500 text-white text-[11px] font-medium px-3 py-1.5 rounded-full shadow-lg"
+                        className="opacity-0 group-hover:opacity-100 transition-all translate-y-1 group-hover:translate-y-0 bg-red-500 text-white text-[11px] font-semibold px-3 py-1.5 rounded-full shadow-lg hover:bg-red-600"
                       >
                         ✕
                       </button>

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
+import { ThemeToggle } from "@/components/theme-provider";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -55,20 +56,22 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex flex-col min-h-screen">
-      <header className="flex items-center justify-between px-6 py-4 border-b border-zinc-200 dark:border-zinc-800">
-        <Link href="/" className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-500 bg-clip-text text-transparent">
-          Windy Club
+    <div className="flex flex-col min-h-screen bg-background text-foreground">
+      <header className="flex items-center justify-between px-6 py-4 border-b border-card-border">
+        <Link href="/" className="text-xl font-bold bg-gradient-to-r from-violet-500 via-fuchsia-500 to-pink-500 bg-clip-text text-transparent">
+          ✨ Windy Club
         </Link>
+        <ThemeToggle />
       </header>
 
       <main className="flex flex-1 items-center justify-center px-6">
         <div className="w-full max-w-sm space-y-6">
           <div className="text-center space-y-2">
+            <div className="text-4xl mb-2">{mode === "login" ? "👋" : "🎉"}</div>
             <h1 className="text-2xl font-bold">
-              {mode === "login" ? "เข้าสู่ระบบ" : "สมัครสมาชิก"}
+              {mode === "login" ? "ยินดีต้อนรับกลับ" : "สมัครสมาชิก"}
             </h1>
-            <p className="text-sm text-zinc-500">
+            <p className="text-sm text-muted">
               {mode === "login"
                 ? "เข้าสู่ระบบเพื่อสร้าง Sticker"
                 : "สมัครฟรี สร้าง Sticker ได้ 3 ครั้ง/วัน"}
@@ -77,7 +80,7 @@ export default function LoginPage() {
 
           <button
             onClick={handleGoogleLogin}
-            className="w-full flex items-center justify-center gap-2 rounded-xl border border-zinc-300 dark:border-zinc-700 px-4 py-3 text-sm font-medium hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors"
+            className="w-full flex items-center justify-center gap-2 rounded-xl border border-card-border bg-card px-4 py-3 text-sm font-medium hover:bg-violet-50 dark:hover:bg-violet-500/5 hover:border-violet-300 dark:hover:border-violet-700 transition-all"
           >
             <svg className="w-5 h-5" viewBox="0 0 24 24">
               <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/>
@@ -90,10 +93,10 @@ export default function LoginPage() {
 
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-zinc-300 dark:border-zinc-700" />
+              <div className="w-full border-t border-card-border" />
             </div>
             <div className="relative flex justify-center text-xs">
-              <span className="bg-background px-2 text-zinc-500">หรือ</span>
+              <span className="bg-background px-3 text-muted">หรือ</span>
             </div>
           </div>
 
@@ -104,7 +107,7 @@ export default function LoginPage() {
               onChange={(e) => setEmail(e.target.value)}
               placeholder="อีเมล"
               required
-              className="w-full rounded-xl border border-zinc-300 dark:border-zinc-700 px-4 py-3 text-sm bg-white dark:bg-zinc-900 focus:outline-none focus:ring-2 focus:ring-purple-500"
+              className="w-full rounded-xl border border-card-border bg-card px-4 py-3 text-sm text-foreground placeholder-muted focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-colors"
             />
             <input
               type="password"
@@ -113,16 +116,24 @@ export default function LoginPage() {
               placeholder="รหัสผ่าน (อย่างน้อย 6 ตัว)"
               required
               minLength={6}
-              className="w-full rounded-xl border border-zinc-300 dark:border-zinc-700 px-4 py-3 text-sm bg-white dark:bg-zinc-900 focus:outline-none focus:ring-2 focus:ring-purple-500"
+              className="w-full rounded-xl border border-card-border bg-card px-4 py-3 text-sm text-foreground placeholder-muted focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-colors"
             />
 
-            {error && <p className="text-red-500 text-sm">{error}</p>}
-            {message && <p className="text-green-500 text-sm">{message}</p>}
+            {error && (
+              <div className="rounded-lg bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 px-3 py-2">
+                <p className="text-red-600 dark:text-red-400 text-sm">{error}</p>
+              </div>
+            )}
+            {message && (
+              <div className="rounded-lg bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 px-3 py-2">
+                <p className="text-emerald-600 dark:text-emerald-400 text-sm">{message}</p>
+              </div>
+            )}
 
             <button
               type="submit"
               disabled={loading}
-              className="w-full rounded-xl bg-purple-600 px-4 py-3 text-sm font-semibold text-white hover:bg-purple-700 transition-colors disabled:opacity-50"
+              className="w-full rounded-xl bg-gradient-to-r from-violet-500 via-fuchsia-500 to-pink-500 px-4 py-3 text-sm font-semibold text-white hover:shadow-lg hover:shadow-fuchsia-500/25 transition-all disabled:opacity-50"
             >
               {loading
                 ? "กำลังดำเนินการ..."
@@ -132,18 +143,18 @@ export default function LoginPage() {
             </button>
           </form>
 
-          <p className="text-center text-sm text-zinc-500">
+          <p className="text-center text-sm text-muted">
             {mode === "login" ? (
               <>
                 ยังไม่มีบัญชี?{" "}
-                <button onClick={() => setMode("signup")} className="text-purple-600 font-medium hover:underline">
+                <button onClick={() => setMode("signup")} className="text-violet-600 dark:text-violet-400 font-medium hover:underline">
                   สมัครเลย
                 </button>
               </>
             ) : (
               <>
                 มีบัญชีแล้ว?{" "}
-                <button onClick={() => setMode("login")} className="text-purple-600 font-medium hover:underline">
+                <button onClick={() => setMode("login")} className="text-violet-600 dark:text-violet-400 font-medium hover:underline">
                   เข้าสู่ระบบ
                 </button>
               </>
