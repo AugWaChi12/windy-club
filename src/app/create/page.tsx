@@ -1,7 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
+import { createClient } from "@/lib/supabase/client";
+import type { User } from "@supabase/supabase-js";
 
 const STYLES = [
   { id: "kawaii", label: "Kawaii", emoji: "🌸" },
@@ -20,12 +22,29 @@ export default function CreatePage() {
   const [images, setImages] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [showUpgrade, setShowUpgrade] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
+  const [checkingAuth, setCheckingAuth] = useState(true);
+
+  const supabase = createClient();
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      setUser(user);
+      setCheckingAuth(false);
+    });
+  }, []);
 
   async function handleGenerate() {
     if (!prompt.trim()) return;
+    if (!user) {
+      window.location.href = "/login";
+      return;
+    }
 
     setLoading(true);
     setError("");
+    setShowUpgrade(false);
     setImages([]);
 
     try {
@@ -38,7 +57,11 @@ export default function CreatePage() {
       const data = await response.json();
 
       if (!response.ok) {
-        setError(data.error || "เกิดข้อผิดพลาด ลองใหม่อีกครั้ง");
+        const errData = data;
+        if (errData.upgrade) {
+          setShowUpgrade(true);
+        }
+        setError(errData.error || "เกิดข้อผิดพลาด ลองใหม่อีกครั้ง");
         return;
       }
 
@@ -75,12 +98,50 @@ export default function CreatePage() {
     }
   }
 
+  async function handleUpgrade() {
+    const response = await fetch("/api/checkout", { method: "POST" });
+    const data = await response.json();
+    if (data.url) {
+      window.location.href = data.url;
+    }
+  }
+
+  async function handleLogout() {
+    await supabase.auth.signOut();
+    window.location.href = "/";
+  }
+
+  if (checkingAuth) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <p className="text-zinc-500">กำลังโหลด...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col min-h-screen">
       <header className="flex items-center justify-between px-6 py-4 border-b border-zinc-200 dark:border-zinc-800">
         <Link href="/" className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-500 bg-clip-text text-transparent">
           Windy Club
         </Link>
+        <div className="flex items-center gap-3">
+          {user ? (
+            <>
+              <span className="text-sm text-zinc-500">{user.email}</span>
+              <button
+                onClick={handleLogout}
+                className="text-sm text-zinc-400 hover:text-zinc-600"
+              >
+                ออกจากระบบ
+              </button>
+            </>
+          ) : (
+            <Link href="/login" className="rounded-full bg-purple-600 px-4 py-2 text-sm font-medium text-white hover:bg-purple-700">
+              เข้าสู่ระบบ
+            </Link>
+          )}
+        </div>
       </header>
 
       <main className="flex-1 max-w-4xl mx-auto w-full px-6 py-10">
@@ -167,6 +228,21 @@ export default function CreatePage() {
 
           {error && (
             <p className="text-red-500 text-sm text-center">{error}</p>
+          )}
+
+          {showUpgrade && (
+            <div className="rounded-xl border-2 border-purple-500 bg-purple-50 dark:bg-purple-950/30 p-6 text-center space-y-3">
+              <h3 className="text-lg font-bold">🚀 อัปเกรดเป็น Pro</h3>
+              <p className="text-sm text-zinc-600 dark:text-zinc-400">
+                สร้าง Sticker ไม่จำกัด ไม่มี watermark เพียง ฿199/เดือน
+              </p>
+              <button
+                onClick={handleUpgrade}
+                className="rounded-full bg-purple-600 px-6 py-2 text-sm font-semibold text-white hover:bg-purple-700 transition-colors"
+              >
+                อัปเกรด Pro — ฿199/เดือน
+              </button>
+            </div>
           )}
         </div>
 
