@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { ThemeToggle } from "@/components/theme-provider";
+import { AdBanner } from "@/components/ad-banner";
 import type { User } from "@supabase/supabase-js";
 
 const STYLES = [
@@ -26,6 +27,7 @@ export default function CreatePage() {
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [remaining, setRemaining] = useState<number | null>(null);
   const [dailyLimit, setDailyLimit] = useState<number | null>(null);
+  const [isPro, setIsPro] = useState(false);
 
   const supabase = createClient();
 
@@ -80,6 +82,7 @@ export default function CreatePage() {
       }
       if (data.remaining !== undefined) setRemaining(data.remaining);
       if (data.dailyLimit !== undefined) setDailyLimit(data.dailyLimit);
+      if (data.isPro !== undefined) setIsPro(data.isPro);
     } catch {
       setError("ไม่สามารถเชื่อมต่อได้ ลองใหม่อีกครั้ง");
     } finally {
@@ -331,9 +334,7 @@ export default function CreatePage() {
             </div>
 
             {/* Ad slot - top of gallery */}
-            <div className="ad-slot ad-slot-banner mb-4" data-ad-slot="create-top">
-              <span className="text-xs text-muted/40 select-none">Ad Space</span>
-            </div>
+            <AdBanner position="create-top" isPro={isPro} className="mb-4" />
 
             {gallery.length === 0 && !loading ? (
               <div className="flex items-center justify-center h-72 rounded-2xl border-2 border-dashed border-card-border bg-card/50 decoration-dots">
@@ -385,9 +386,7 @@ export default function CreatePage() {
             )}
 
             {/* Ad slot - bottom of gallery */}
-            <div className="ad-slot ad-slot-banner mt-4" data-ad-slot="create-bottom">
-              <span className="text-xs text-muted/40 select-none">Ad Space</span>
-            </div>
+            <AdBanner position="create-bottom" isPro={isPro} className="mt-4" />
           </div>
         </div>
       </main>

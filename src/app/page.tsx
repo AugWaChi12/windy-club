@@ -2,20 +2,13 @@
 
 import Link from "next/link";
 import { ThemeToggle } from "@/components/theme-provider";
+import { AdBanner } from "@/components/ad-banner";
 
 function FloatingEmoji({ emoji, className }: { emoji: string; className: string }) {
   return (
     <span className={`absolute text-2xl select-none pointer-events-none ${className}`}>
       {emoji}
     </span>
-  );
-}
-
-function AdSlot({ type = "banner", className = "" }: { type?: "banner" | "square"; className?: string }) {
-  return (
-    <div className={`ad-slot ad-slot-${type} ${className}`} data-ad-slot={type}>
-      <span className="text-xs text-muted/40 select-none">Ad Space</span>
-    </div>
   );
 }
 
@@ -110,7 +103,7 @@ export default function Home() {
 
           {/* Ad slot - below hero */}
           <div className="animate-fade-in-up stagger-5 opacity-0 pt-6">
-            <AdSlot type="banner" />
+            <AdBanner position="home-hero" />
           </div>
 
           {/* Features */}
@@ -156,14 +149,15 @@ export default function Home() {
 
           {/* Ad slot - bottom of page */}
           <div className="animate-fade-in-up stagger-5 opacity-0 pt-4">
-            <AdSlot type="banner" />
+            <AdBanner position="home-hero" />
           </div>
         </div>
       </main>
 
-      <footer className="relative z-10 py-6 text-center text-xs text-muted border-t border-card-border">
+      <footer className="relative z-10 py-6 text-center text-xs text-muted border-t border-card-border space-y-1">
         <p>© 2026 Windy Club — AI Sticker Creator</p>
-        <p className="mt-1 text-muted/50">Made with 💜 in Thailand</p>
+        <p className="text-muted/50">Made with 💜 in Thailand</p>
+        <Link href="/advertise" className="inline-block text-violet-500 hover:underline mt-1">📢 ลงโฆษณากับเรา</Link>
       </footer>
     </div>
   );
