@@ -29,6 +29,18 @@ export default function CreatePage() {
     supabase.auth.getUser().then(({ data: { user: authUser } }) => {
       setUser(authUser);
       setCheckingAuth(false);
+
+      // Load saved stickers from storage
+      if (authUser) {
+        fetch("/api/stickers")
+          .then((res) => res.json())
+          .then((data) => {
+            if (data.images?.length > 0) {
+              setGallery(data.images);
+            }
+          })
+          .catch(() => {});
+      }
     });
   }, [supabase.auth]);
 
@@ -87,7 +99,15 @@ export default function CreatePage() {
   }
 
   function handleRemove(index: number) {
+    const imageUrl = gallery[index];
     setGallery((prev) => prev.filter((_, i) => i !== index));
+
+    // Delete from Supabase Storage in background
+    fetch("/api/stickers", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ url: imageUrl }),
+    }).catch(() => {});
   }
 
   async function handleUpgrade() {
@@ -244,7 +264,17 @@ export default function CreatePage() {
               </h2>
               {gallery.length > 0 && (
                 <button
-                  onClick={() => setGallery([])}
+                  onClick={() => {
+                    // Delete all from storage in background
+                    for (const url of gallery) {
+                      fetch("/api/stickers", {
+                        method: "DELETE",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ url }),
+                      }).catch(() => {});
+                    }
+                    setGallery([]);
+                  }}
                   className="text-xs text-zinc-600 hover:text-zinc-400 transition-colors"
                 >
                   ล้างทั้งหมด

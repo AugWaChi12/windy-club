@@ -11,6 +11,11 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "pbxt.replicate.delivery",
       },
+      {
+        protocol: "https",
+        hostname: "cujhbssftphcdqubalru.supabase.co",
+        pathname: "/storage/v1/object/public/**",
+      },
     ],
   },
 };

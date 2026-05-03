@@ -1,6 +1,7 @@
 import Replicate from "replicate";
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { supabaseAdmin } from "@/lib/supabase/admin";
 
 const replicate = new Replicate({
   auth: process.env.REPLICATE_API_TOKEN,
@@ -105,6 +106,35 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Upload images to Supabase Storage for persistence
+    const permanentUrls: string[] = [];
+    for (const replicateUrl of results) {
+      try {
+        const imageResponse = await fetch(replicateUrl);
+        const imageBuffer = await imageResponse.arrayBuffer();
+        const fileName = `${user.id}/${Date.now()}-${crypto.randomUUID()}.png`;
+
+        const { error: uploadError } = await supabaseAdmin.storage
+          .from("stickers")
+          .upload(fileName, imageBuffer, {
+            contentType: "image/png",
+            upsert: false,
+          });
+
+        if (uploadError) {
+          console.error("Storage upload error:", uploadError.message);
+          permanentUrls.push(replicateUrl); // fallback to temp URL
+        } else {
+          const { data: urlData } = supabaseAdmin.storage
+            .from("stickers")
+            .getPublicUrl(fileName);
+          permanentUrls.push(urlData.publicUrl);
+        }
+      } catch {
+        permanentUrls.push(replicateUrl); // fallback to temp URL
+      }
+    }
+
     // Log generation for usage tracking
     await supabase.from("generations").insert({
       user_id: user.id,
@@ -114,7 +144,7 @@ export async function POST(request: NextRequest) {
       is_pro: isPro,
     });
 
-    return NextResponse.json({ images: results, isPro });
+    return NextResponse.json({ images: permanentUrls, isPro });
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
     console.error("Replicate API error:", errorMessage);
