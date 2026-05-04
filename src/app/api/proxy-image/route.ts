@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const ALLOWED_HOSTS = ["replicate.delivery", "pbxt.replicate.delivery"];
+const ALLOWED_HOSTS = [
+  "replicate.delivery",
+  "pbxt.replicate.delivery",
+  "cujhbssftphcdqubalru.supabase.co",
+];
 
 export async function GET(request: NextRequest) {
   const imageUrl = request.nextUrl.searchParams.get("url");
