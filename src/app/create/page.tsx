@@ -151,8 +151,22 @@ export default function CreatePage() {
       <header className="sticky top-0 z-50 backdrop-blur-xl bg-background/80 border-b border-card-border">
         <div className="max-w-6xl mx-auto flex items-center justify-between px-4 py-3">
           <Link href="/" className="flex items-center gap-2 text-lg font-bold">
+            <span className="relative w-7 h-7 flex items-center justify-center">
+              <svg viewBox="0 0 32 32" className="w-7 h-7" fill="none">
+                <defs>
+                  <linearGradient id="logo-grad-c" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#7c3aed" />
+                    <stop offset="50%" stopColor="#d946ef" />
+                    <stop offset="100%" stopColor="#ec4899" />
+                  </linearGradient>
+                </defs>
+                <circle cx="16" cy="16" r="14" stroke="url(#logo-grad-c)" strokeWidth="2.5" fill="none" className="logo-ring" />
+                <path d="M10 20 C10 14, 16 8, 22 12 C20 16, 18 18, 16 20 C14 18, 12 16, 10 20Z" fill="url(#logo-grad-c)" opacity="0.9" />
+                <circle cx="20" cy="10" r="2" fill="url(#logo-grad-c)" opacity="0.6" />
+              </svg>
+            </span>
             <span className="bg-gradient-to-r from-violet-500 via-fuchsia-500 to-pink-500 bg-clip-text text-transparent">
-              ✨ Windy Club
+              Windy Club
             </span>
           </Link>
           <div className="flex items-center gap-2">

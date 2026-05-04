@@ -14,7 +14,7 @@ function FloatingEmoji({ emoji, className }: { emoji: string; className: string 
 
 export default function Home() {
   return (
-    <div className="flex flex-col min-h-screen bg-background text-foreground overflow-hidden">
+    <div className="flex flex-col min-h-screen bg-background text-foreground overflow-hidden mesh-gradient">
       {/* Floating decorations */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
         <FloatingEmoji emoji="✨" className="top-[15%] left-[10%] animate-float stagger-1 opacity-30" />
@@ -28,8 +28,24 @@ export default function Home() {
       {/* Header */}
       <header className="relative z-10 border-b border-card-border backdrop-blur-xl bg-background/80">
         <div className="max-w-6xl mx-auto flex items-center justify-between px-4 py-3">
-          <h1 className="text-lg font-bold bg-gradient-to-r from-violet-500 via-fuchsia-500 to-pink-500 bg-clip-text text-transparent animate-gradient">
-            ✨ Windy Club
+          <h1 className="text-lg font-bold flex items-center gap-2">
+            <span className="relative w-7 h-7 flex items-center justify-center">
+              <svg viewBox="0 0 32 32" className="w-7 h-7" fill="none">
+                <defs>
+                  <linearGradient id="logo-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#7c3aed" />
+                    <stop offset="50%" stopColor="#d946ef" />
+                    <stop offset="100%" stopColor="#ec4899" />
+                  </linearGradient>
+                </defs>
+                <circle cx="16" cy="16" r="14" stroke="url(#logo-grad)" strokeWidth="2.5" fill="none" className="logo-ring" />
+                <path d="M10 20 C10 14, 16 8, 22 12 C20 16, 18 18, 16 20 C14 18, 12 16, 10 20Z" fill="url(#logo-grad)" opacity="0.9" />
+                <circle cx="20" cy="10" r="2" fill="url(#logo-grad)" opacity="0.6" />
+              </svg>
+            </span>
+            <span className="bg-gradient-to-r from-violet-500 via-fuchsia-500 to-pink-500 bg-clip-text text-transparent animate-gradient">
+              Windy Club
+            </span>
           </h1>
           <div className="flex items-center gap-2">
             <ThemeToggle />
@@ -57,25 +73,26 @@ export default function Home() {
           </div>
 
           {/* Hero */}
-          <h2 className="animate-fade-in-up stagger-1 text-4xl font-bold tracking-tight sm:text-5xl leading-tight opacity-0">
+          <h2 className="animate-fade-in-up stagger-1 text-4xl font-bold tracking-tight sm:text-6xl leading-tight opacity-0">
             สร้าง{" "}
-            <span className="bg-gradient-to-r from-violet-500 via-fuchsia-500 to-pink-500 bg-clip-text text-transparent animate-gradient inline-block">
+            <span className="bg-gradient-to-r from-violet-500 via-fuchsia-500 to-pink-500 bg-clip-text text-transparent animate-gradient inline-block drop-shadow-sm">
               Sticker
             </span>
-            <br />ด้วย AI ใน 1 วินาที
+            <br />
+            <span className="text-3xl sm:text-5xl">ด้วย AI ใน 1 วินาที</span>
           </h2>
 
-          <p className="animate-fade-in-up stagger-2 text-base text-muted max-w-md mx-auto opacity-0">
+          <p className="animate-fade-in-up stagger-2 text-lg text-muted max-w-md mx-auto opacity-0">
             แค่พิมพ์บอกว่าอยากได้อะไร — AI จะวาด Sticker สุดน่ารักให้ทันที
             <br />
-            <span className="text-xs">รองรับภาษาไทย 🇹🇭</span>
+            <span className="text-sm mt-1 inline-block">รองรับภาษาไทย 🇹🇭</span>
           </p>
 
           {/* CTA */}
           <div className="animate-fade-in-up stagger-3 opacity-0">
             <Link
               href="/create"
-              className="group inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-violet-500 via-fuchsia-500 to-pink-500 px-8 py-4 text-base font-semibold text-white hover:shadow-xl hover:shadow-fuchsia-500/30 hover:scale-105 transition-all animate-gradient"
+              className="group inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-violet-500 via-fuchsia-500 to-pink-500 px-10 py-4 text-lg font-semibold text-white hover:shadow-2xl hover:shadow-fuchsia-500/40 hover:scale-105 transition-all animate-gradient glow-violet"
             >
               <span className="group-hover:animate-wiggle inline-block text-xl">🎨</span>
               เริ่มสร้างเลย — ฟรี
@@ -107,43 +124,47 @@ export default function Home() {
           </div>
 
           {/* Features */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-12 text-left">
-            <div className="animate-fade-in-up stagger-1 opacity-0 rounded-2xl border border-card-border bg-card p-5 space-y-2 hover:shadow-lg hover:border-violet-300 dark:hover:border-violet-700 hover:scale-[1.02] transition-all group cursor-default">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-lg group-hover:animate-wiggle transition-transform shadow-md shadow-amber-200/50 dark:shadow-amber-900/30">⚡</div>
-              <h3 className="text-sm font-semibold">เร็วมาก</h3>
-              <p className="text-xs text-muted">สร้าง Sticker ภายใน 1-2 วินาที</p>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-12 text-left">
+            <div className="animate-fade-in-up stagger-1 opacity-0 rounded-2xl border border-card-border glass-card p-6 space-y-3 hover:shadow-xl hover:border-violet-300 dark:hover:border-violet-700 hover:scale-[1.03] transition-all group cursor-default">
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-xl group-hover:animate-wiggle transition-transform shadow-lg shadow-amber-200/50 dark:shadow-amber-900/30">⚡</div>
+              <h3 className="text-base font-bold">เร็วมาก</h3>
+              <p className="text-sm text-muted">สร้าง Sticker ภายใน 1-2 วินาที</p>
             </div>
-            <div className="animate-fade-in-up stagger-2 opacity-0 rounded-2xl border border-card-border bg-card p-5 space-y-2 hover:shadow-lg hover:border-violet-300 dark:hover:border-violet-700 hover:scale-[1.02] transition-all group cursor-default">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-pink-400 to-rose-500 flex items-center justify-center text-lg group-hover:animate-wiggle transition-transform shadow-md shadow-pink-200/50 dark:shadow-pink-900/30">🎭</div>
-              <h3 className="text-sm font-semibold">10 Styles</h3>
-              <p className="text-xs text-muted">Kawaii, Anime, 3D Clay, Neon, Watercolor...</p>
+            <div className="animate-fade-in-up stagger-2 opacity-0 rounded-2xl border border-card-border glass-card p-6 space-y-3 hover:shadow-xl hover:border-violet-300 dark:hover:border-violet-700 hover:scale-[1.03] transition-all group cursor-default">
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-pink-400 to-rose-500 flex items-center justify-center text-xl group-hover:animate-wiggle transition-transform shadow-lg shadow-pink-200/50 dark:shadow-pink-900/30">🎭</div>
+              <h3 className="text-base font-bold">10 Styles</h3>
+              <p className="text-sm text-muted">Kawaii, Anime, 3D Clay, Neon, Watercolor...</p>
             </div>
-            <div className="animate-fade-in-up stagger-3 opacity-0 rounded-2xl border border-card-border bg-card p-5 space-y-2 hover:shadow-lg hover:border-violet-300 dark:hover:border-violet-700 hover:scale-[1.02] transition-all group cursor-default">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center text-lg group-hover:animate-wiggle transition-transform shadow-md shadow-emerald-200/50 dark:shadow-emerald-900/30">♾️</div>
-              <h3 className="text-sm font-semibold">ไม่ซ้ำกัน</h3>
-              <p className="text-xs text-muted">กด Generate กี่ทีก็ได้ผลต่างกันทุกครั้ง</p>
+            <div className="animate-fade-in-up stagger-3 opacity-0 rounded-2xl border border-card-border glass-card p-6 space-y-3 hover:shadow-xl hover:border-violet-300 dark:hover:border-violet-700 hover:scale-[1.03] transition-all group cursor-default">
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center text-xl group-hover:animate-wiggle transition-transform shadow-lg shadow-emerald-200/50 dark:shadow-emerald-900/30">♾️</div>
+              <h3 className="text-base font-bold">ไม่ซ้ำกัน</h3>
+              <p className="text-sm text-muted">กด Generate กี่ทีก็ได้ผลต่างกันทุกครั้ง</p>
             </div>
           </div>
 
           {/* Pro Plan */}
           <div className="animate-fade-in-up stagger-4 opacity-0 pt-8">
-            <div className="rounded-3xl border-2 border-violet-300/50 dark:border-violet-600/30 bg-gradient-to-br from-violet-50 via-fuchsia-50 to-pink-50 dark:from-violet-500/5 dark:via-fuchsia-500/5 dark:to-pink-500/5 p-8 space-y-4 hover:shadow-xl hover:shadow-violet-200/30 dark:hover:shadow-violet-900/20 transition-all">
-              <div className="inline-flex items-center gap-1 text-xs font-bold text-violet-600 dark:text-violet-400 bg-violet-100 dark:bg-violet-500/20 px-3 py-1 rounded-full">
-                <span className="animate-sparkle">✨</span> Pro Plan
+            <div className="rounded-3xl border-2 border-violet-300/50 dark:border-violet-600/30 bg-gradient-to-br from-violet-50 via-fuchsia-50 to-pink-50 dark:from-violet-500/5 dark:via-fuchsia-500/5 dark:to-pink-500/5 p-8 space-y-5 hover:shadow-2xl hover:shadow-violet-200/40 dark:hover:shadow-violet-900/30 transition-all relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-violet-400/20 to-fuchsia-400/20 rounded-full blur-2xl" />
+              <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-br from-pink-400/20 to-rose-400/20 rounded-full blur-2xl" />
+              <div className="relative z-10 space-y-4">
+                <div className="inline-flex items-center gap-1 text-xs font-bold text-violet-600 dark:text-violet-400 bg-violet-100 dark:bg-violet-500/20 px-3 py-1 rounded-full">
+                  <span className="animate-sparkle">✨</span> Pro Plan
+                </div>
+                <h3 className="text-2xl font-bold">฿199<span className="text-sm font-normal text-muted">/เดือน</span></h3>
+                <ul className="text-sm text-muted space-y-2 text-left max-w-xs mx-auto">
+                  <li className="flex items-center gap-2"><span className="text-emerald-500 text-base">✓</span> สร้างได้ 30 รูป/วัน</li>
+                  <li className="flex items-center gap-2"><span className="text-emerald-500 text-base">✓</span> Batch สูงสุด 4 รูปพร้อมกัน</li>
+                  <li className="flex items-center gap-2"><span className="text-emerald-500 text-base">✓</span> ไม่มีโฆษณา</li>
+                  <li className="flex items-center gap-2"><span className="text-emerald-500 text-base">✓</span> AI สร้างท่าทางหลากหลาย</li>
+                </ul>
+                <Link
+                  href="/create"
+                  className="inline-block rounded-full bg-gradient-to-r from-violet-500 to-fuchsia-500 px-8 py-3 text-sm font-bold text-white hover:scale-105 hover:shadow-lg hover:shadow-violet-500/30 transition-all"
+                >
+                  ทดลองฟรี →
+                </Link>
               </div>
-              <h3 className="text-xl font-bold">฿199<span className="text-sm font-normal text-muted">/เดือน</span></h3>
-              <ul className="text-sm text-muted space-y-1.5 text-left max-w-xs mx-auto">
-                <li className="flex items-center gap-2"><span className="text-emerald-500">✓</span> สร้างได้ 30 รูป/วัน</li>
-                <li className="flex items-center gap-2"><span className="text-emerald-500">✓</span> Batch สูงสุด 4 รูปพร้อมกัน</li>
-                <li className="flex items-center gap-2"><span className="text-emerald-500">✓</span> ไม่มีโฆษณา</li>
-                <li className="flex items-center gap-2"><span className="text-emerald-500">✓</span> AI สร้างท่าทางหลากหลาย</li>
-              </ul>
-              <Link
-                href="/create"
-                className="inline-block rounded-full bg-gradient-to-r from-violet-500 to-fuchsia-500 px-6 py-2.5 text-sm font-semibold text-white hover:scale-105 hover:shadow-lg hover:shadow-violet-500/30 transition-all"
-              >
-                ทดลองฟรี →
-              </Link>
             </div>
           </div>
 
