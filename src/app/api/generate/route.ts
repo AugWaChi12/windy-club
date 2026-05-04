@@ -27,6 +27,7 @@ const FREE_DAILY_LIMIT = 3;
 const PRO_DAILY_LIMIT = 50;
 const MAX_ACCOUNTS_PER_IP = 3;
 const MAX_OUTPUTS_PER_CALL = 3;
+const ADMIN_EMAIL = "supakorn@windy-club.com";
 
 const NON_LATIN_PATTERN = /[^\u0000-\u007F]/;
 
@@ -156,7 +157,8 @@ export async function POST(request: NextRequest) {
     .single();
 
   const isPro = profile?.is_pro === true;
-  const dailyLimit = isPro ? PRO_DAILY_LIMIT : FREE_DAILY_LIMIT;
+  const isAdmin = user.email === ADMIN_EMAIL;
+  const dailyLimit = isAdmin ? 9999 : isPro ? PRO_DAILY_LIMIT : FREE_DAILY_LIMIT;
 
   // Check daily usage (sum the count column = total images generated)
   const today = new Date().toISOString().split("T")[0];
