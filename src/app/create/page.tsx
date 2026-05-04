@@ -33,6 +33,7 @@ export default function CreatePage() {
   const [remaining, setRemaining] = useState<number | null>(null);
   const [dailyLimit, setDailyLimit] = useState<number | null>(null);
   const [isPro, setIsPro] = useState(false);
+  const [animatingIndex, setAnimatingIndex] = useState<number | null>(null);
 
   const supabase = createClient();
 
@@ -97,19 +98,22 @@ export default function CreatePage() {
 
   async function handleDownload(imageUrl: string, index: number) {
     try {
+      const isVideo = imageUrl.endsWith(".mp4") || imageUrl.endsWith(".webm");
       const proxyUrl = `/api/proxy-image?url=${encodeURIComponent(imageUrl)}`;
       const response = await fetch(proxyUrl);
       const blob = await response.blob();
       const url = URL.createObjectURL(blob);
       const anchor = document.createElement("a");
       anchor.href = url;
-      anchor.download = `windy-sticker-${index + 1}.png`;
+      anchor.download = isVideo
+        ? `windy-sticker-${index + 1}.mp4`
+        : `windy-sticker-${index + 1}.png`;
       document.body.appendChild(anchor);
       anchor.click();
       document.body.removeChild(anchor);
       URL.revokeObjectURL(url);
     } catch {
-      alert("ดาวน์โหลดไม่สำเร็จ ลองคลิกขวาแล้ว Save Image");
+      alert("ดาวน์โหลดไม่สำเร็จ ลองคลิกขวาแล้ว Save");
     }
   }
 
@@ -127,6 +131,36 @@ export default function CreatePage() {
     const response = await fetch("/api/checkout", { method: "POST" });
     const data = await response.json();
     if (data.url) window.location.href = data.url;
+  }
+
+  async function handleAnimate(imageUrl: string, index: number) {
+    setAnimatingIndex(index);
+    setError("");
+    try {
+      const response = await fetch("/api/animate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ imageUrl }),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        if (data.upgrade) setShowUpgrade(true);
+        setError(data.error || "สร้าง animation ไม่สำเร็จ");
+        return;
+      }
+      if (data.videoUrl) {
+        setGallery((prev) => {
+          const updated = [...prev];
+          // Insert animated version right after the original
+          updated.splice(index, 0, data.videoUrl);
+          return updated;
+        });
+      }
+    } catch {
+      setError("ไม่สามารถเชื่อมต่อได้ ลองใหม่อีกครั้ง");
+    } finally {
+      setAnimatingIndex(null);
+    }
   }
 
   async function handleLogout() {
@@ -374,12 +408,24 @@ export default function CreatePage() {
                     </div>
                   </div>
                 )}
-                {gallery.map((img, idx) => (
+                {gallery.map((img, idx) => {
+                  const isVideo = img.endsWith(".mp4") || img.endsWith(".webm");
+                  return (
                   <div
                     key={`${img}-${idx}`}
                     className="gallery-item group relative aspect-square rounded-2xl border border-card-border overflow-hidden bg-white dark:bg-zinc-900 hover:shadow-xl hover:shadow-violet-500/15 hover:border-violet-400 dark:hover:border-violet-600 hover:scale-[1.05] hover:-rotate-1 active:scale-95 transition-all cursor-pointer"
                     style={{ animationDelay: `${idx * 0.08}s` }}
                   >
+                    {isVideo ? (
+                      <video
+                        src={img}
+                        autoPlay
+                        loop
+                        muted
+                        playsInline
+                        className="w-full h-full object-cover transition-transform group-hover:scale-110"
+                      />
+                    ) : (
                     <img
                       src={img}
                       alt={`Sticker ${idx + 1}`}
@@ -387,13 +433,36 @@ export default function CreatePage() {
                       decoding="async"
                       className="w-full h-full object-cover transition-transform group-hover:scale-110"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-center pb-3 gap-2">
+                    )}
+                    {isVideo && (
+                      <span className="absolute top-2 left-2 bg-gradient-to-r from-fuchsia-500 to-pink-500 text-white text-[9px] font-bold px-2 py-0.5 rounded-full shadow-sm">
+                        🎬 Animated
+                      </span>
+                    )}
+                    {animatingIndex === idx && (
+                      <div className="absolute inset-0 bg-black/60 flex items-center justify-center z-10">
+                        <div className="text-center space-y-2">
+                          <div className="inline-block animate-spin h-6 w-6 border-2 border-fuchsia-400 border-t-transparent rounded-full" />
+                          <p className="text-[11px] text-white font-medium">กำลังสร้าง...</p>
+                        </div>
+                      </div>
+                    )}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-center pb-3 gap-1.5">
                       <button
                         onClick={() => handleDownload(img, idx)}
                         className="opacity-0 group-hover:opacity-100 transition-all translate-y-1 group-hover:translate-y-0 bg-white text-black text-[11px] font-semibold px-3 py-1.5 rounded-full shadow-lg hover:bg-violet-50"
                       >
                         ⬇ Save
                       </button>
+                      {!isVideo && (
+                        <button
+                          onClick={() => handleAnimate(img, idx)}
+                          disabled={animatingIndex !== null}
+                          className="opacity-0 group-hover:opacity-100 transition-all translate-y-1 group-hover:translate-y-0 bg-gradient-to-r from-fuchsia-500 to-pink-500 text-white text-[11px] font-semibold px-3 py-1.5 rounded-full shadow-lg hover:opacity-90 disabled:opacity-40"
+                        >
+                          🎬 Animate
+                        </button>
+                      )}
                       <button
                         onClick={() => handleRemove(idx)}
                         className="opacity-0 group-hover:opacity-100 transition-all translate-y-1 group-hover:translate-y-0 bg-red-500 text-white text-[11px] font-semibold px-3 py-1.5 rounded-full shadow-lg hover:bg-red-600"
@@ -402,7 +471,8 @@ export default function CreatePage() {
                       </button>
                     </div>
                   </div>
-                ))}
+                  );
+                })}
               </div>
             )}
 
