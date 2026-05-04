@@ -9,6 +9,7 @@ const replicate = new Replicate({
 
 const MOTION_AMOUNT = 60; // subtle sticker-like bounce (1-255, lower = less motion)
 const FRAMES_PER_SECOND = 8;
+const ANIMATE_DAILY_LIMIT = 5;
 
 export async function POST(request: NextRequest) {
   const supabase = await createClient();
@@ -74,6 +75,28 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  // Daily limit for animations to control cost
+  const today = new Date().toISOString().split("T")[0];
+  const { data: todayAnims } = await supabase
+    .from("generations")
+    .select("count")
+    .eq("user_id", user.id)
+    .eq("style", "animated")
+    .gte("created_at", `${today}T00:00:00`);
+
+  const animUsage =
+    todayAnims?.reduce((sum, g) => sum + (g.count || 0), 0) ?? 0;
+
+  if (animUsage >= ANIMATE_DAILY_LIMIT) {
+    return NextResponse.json(
+      {
+        error: `ครบโควต้า Animate ${ANIMATE_DAILY_LIMIT} ครั้ง/วัน พรุ่งนี้ลองใหม่ได้!`,
+        remaining: 0,
+      },
+      { status: 429 }
+    );
+  }
+
   try {
     const prediction = await replicate.predictions.create({
       model: "stability-ai/stable-video-diffusion",
@@ -132,6 +155,15 @@ export async function POST(request: NextRequest) {
     } else {
       console.error("Storage upload error:", uploadError.message);
     }
+
+    // Log animation for daily limit tracking
+    await supabase.from("generations").insert({
+      user_id: user.id,
+      prompt: "animated",
+      style: "animated",
+      count: 1,
+      is_pro: true,
+    });
 
     return NextResponse.json({ videoUrl: permanentUrl });
   } catch (error) {

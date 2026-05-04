@@ -59,6 +59,46 @@ export async function POST(request: NextRequest) {
       }
       break;
     }
+    case "invoice.payment_failed": {
+      // Revoke Pro when payment fails to prevent free access
+      const failedObj = event.data.object as unknown as { subscription?: string };
+      const subId = failedObj.subscription;
+      if (subId) {
+        const { data: failedProfile } = await supabaseAdmin
+          .from("profiles")
+          .select("id")
+          .eq("stripe_subscription_id", subId)
+          .single();
+
+        if (failedProfile) {
+          await supabaseAdmin
+            .from("profiles")
+            .update({ is_pro: false })
+            .eq("id", failedProfile.id);
+        }
+      }
+      break;
+    }
+    case "invoice.paid": {
+      // Re-activate Pro on successful payment (self-healing)
+      const paidObj = event.data.object as unknown as { subscription?: string };
+      const paidSubId = paidObj.subscription;
+      if (paidSubId) {
+        const { data: paidProfile } = await supabaseAdmin
+          .from("profiles")
+          .select("id")
+          .eq("stripe_subscription_id", paidSubId)
+          .single();
+
+        if (paidProfile) {
+          await supabaseAdmin
+            .from("profiles")
+            .update({ is_pro: true })
+            .eq("id", paidProfile.id);
+        }
+      }
+      break;
+    }
   }
 
   return NextResponse.json({ received: true });

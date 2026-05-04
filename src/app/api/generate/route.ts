@@ -193,6 +193,31 @@ export async function POST(request: NextRequest) {
 
   const styleModifier = STYLE_PROMPTS[style] || STYLE_PROMPTS.kawaii;
 
+  // Reserve quota BEFORE calling Replicate to prevent race condition
+  const insertData: Record<string, unknown> = {
+    user_id: user.id,
+    prompt,
+    style,
+    count: stickerCount,
+    is_pro: isPro,
+  };
+  if (clientIp !== "unknown") {
+    insertData.client_ip = clientIp;
+  }
+  const { data: reservedGen, error: reserveError } = await supabase
+    .from("generations")
+    .insert(insertData)
+    .select("id")
+    .single();
+
+  if (reserveError) {
+    console.error("Failed to reserve quota:", reserveError.message);
+    return NextResponse.json(
+      { error: "ไม่สามารถสร้าง sticker ได้ ลองใหม่อีกครั้ง" },
+      { status: 500 }
+    );
+  }
+
   // Generate varied prompts for each image in the batch
   const variedPrompts = await generateVariedPrompts(
     prompt,
@@ -238,6 +263,10 @@ export async function POST(request: NextRequest) {
     }
 
     if (results.length === 0) {
+      // Rollback reserved quota on failure
+      if (reservedGen?.id) {
+        await supabase.from("generations").delete().eq("id", reservedGen.id);
+      }
       return NextResponse.json(
         { error: "ไม่สามารถสร้าง sticker ได้ ลองใหม่อีกครั้ง" },
         { status: 500 }
@@ -273,20 +302,13 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Log generation for usage tracking with IP
-    const insertData: Record<string, unknown> = {
-      user_id: user.id,
-      prompt,
-      style,
-      count: results.length,
-      is_pro: isPro,
-    };
-    // Only include client_ip if column exists (added via SQL migration)
-    if (clientIp !== "unknown") {
-      insertData.client_ip = clientIp;
+    // Update reserved generation with actual count (may differ if some failed)
+    if (results.length !== stickerCount && reservedGen?.id) {
+      await supabase
+        .from("generations")
+        .update({ count: results.length })
+        .eq("id", reservedGen.id);
     }
-
-    await supabase.from("generations").insert(insertData);
 
     return NextResponse.json({
       images: permanentUrls,
