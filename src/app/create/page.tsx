@@ -369,19 +369,19 @@ export default function CreatePage() {
                 )}
               </label>
               <div className="flex gap-2">
-                {[1, 2, 3, 4].map((n) => (
+                {[1, 2, 4, 9].map((n) => (
                   <button
                     key={n}
                     onClick={() => setCount(n)}
-                    disabled={n > 2 && !showUpgrade && remaining !== null && remaining < n}
+                    disabled={n > 2 && !isPro}
                     className={`flex-1 py-2 rounded-xl text-sm font-bold transition-all border hover:scale-105 active:scale-95 ${
                       count === n
                         ? "bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white border-transparent shadow-lg shadow-violet-500/20"
                         : "bg-card border-card-border text-foreground hover:border-fuchsia-400/50 hover:shadow-md"
-                    } ${n > 2 ? "opacity-60 relative" : ""}`}
+                    } ${n > 2 && !isPro ? "opacity-60 relative" : ""}`}
                   >
                     {n}
-                    {n > 2 && (
+                    {n > 2 && !isPro && (
                       <span className="absolute -top-1.5 -right-1.5 text-[9px] bg-gradient-to-r from-amber-400 to-orange-500 text-white px-1.5 py-0.5 rounded-full font-bold shadow-sm">
                         Pro
                       </span>
@@ -491,16 +491,16 @@ export default function CreatePage() {
                 </div>
               </div>
             ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                {loading && (
-                  <div className="aspect-square rounded-2xl border-2 border-dashed border-violet-300 dark:border-violet-700 bg-violet-50 dark:bg-violet-500/5 flex items-center justify-center animate-scale-in">
-                    <div className="text-center space-y-3">
-                      <div className="text-3xl animate-bounce-soft">✨</div>
-                      <div className="inline-block animate-spin h-5 w-5 border-2 border-violet-500 border-t-transparent rounded-full" />
-                      <p className="text-[11px] text-violet-600 dark:text-violet-400 font-medium">กำลังสร้าง...</p>
+              <div className="grid grid-cols-3 gap-3">
+                {loading && Array.from({ length: count }).map((_, i) => (
+                  <div key={`loading-${i}`} className="aspect-square rounded-2xl border-2 border-dashed border-violet-300 dark:border-violet-700 bg-violet-50 dark:bg-violet-500/5 flex items-center justify-center animate-scale-in" style={{ animationDelay: `${i * 0.06}s` }}>
+                    <div className="text-center space-y-2">
+                      <div className="text-2xl animate-bounce-soft" style={{ animationDelay: `${i * 0.15}s` }}>{["✨", "🎨", "🌟", "💫", "🪄", "⭐", "🎭", "🌈", "🎪"][i % 9]}</div>
+                      <div className="inline-block animate-spin h-4 w-4 border-2 border-violet-500 border-t-transparent rounded-full" />
+                      <p className="text-[10px] text-violet-600 dark:text-violet-400 font-medium">{i + 1}/{count}</p>
                     </div>
                   </div>
-                )}
+                ))}
                 {gallery.map((img, idx) => {
                   const isVideo = img.endsWith(".mp4") || img.endsWith(".webm");
                   return (

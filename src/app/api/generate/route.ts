@@ -24,9 +24,9 @@ const STYLE_PROMPTS: Record<string, string> = {
 };
 
 const FREE_DAILY_LIMIT = 3;
-const PRO_DAILY_LIMIT = 30;
+const PRO_DAILY_LIMIT = 50;
 const MAX_ACCOUNTS_PER_IP = 3;
-const DELAY_BETWEEN_REQUESTS_MS = 8000;
+const MAX_OUTPUTS_PER_CALL = 3;
 
 const NON_LATIN_PATTERN = /[^\u0000-\u007F]/;
 
@@ -192,14 +192,15 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // Clamp batch count: free=1-2, pro=1-4, never exceed remaining quota
+  // Clamp batch count: free=1-2, pro=1-9, never exceed remaining quota
   const remaining = dailyLimit - currentUsage;
-  const maxBatch = isPro ? 4 : 2;
-  const stickerCount = Math.min(
-    Math.max(Number(count) || 1, 1),
-    maxBatch,
-    remaining
+  const maxBatch = isPro ? 9 : 2;
+  const allowedCounts = isPro ? [1, 2, 4, 9] : [1, 2];
+  const requested = Number(count) || 1;
+  const closestAllowed = allowedCounts.reduce((prev, curr) =>
+    Math.abs(curr - requested) < Math.abs(prev - requested) ? curr : prev
   );
+  const stickerCount = Math.min(closestAllowed, maxBatch, remaining);
 
   const styleModifier = STYLE_PROMPTS[style] || STYLE_PROMPTS.kawaii;
 
@@ -228,38 +229,44 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // Generate varied prompts for each image in the batch
+  // Generate varied prompts — one per parallel API call
+  const numCalls = Math.ceil(stickerCount / MAX_OUTPUTS_PER_CALL);
   const variedPrompts = await generateVariedPrompts(
     prompt,
     style || "kawaii",
-    stickerCount
+    numCalls
   );
 
   try {
+    // Split into parallel calls, each producing up to MAX_OUTPUTS_PER_CALL images
+    const numCalls = Math.ceil(stickerCount / MAX_OUTPUTS_PER_CALL);
+    const callPromises = [];
+
+    for (let callIdx = 0; callIdx < numCalls; callIdx++) {
+      const startImg = callIdx * MAX_OUTPUTS_PER_CALL;
+      const outputsThisCall = Math.min(MAX_OUTPUTS_PER_CALL, stickerCount - startImg);
+      const callPrompt = variedPrompts[callIdx] || variedPrompts[0];
+
+      const fullPrompt = `A sticker of ${callPrompt}, ${styleModifier}, pure white background, no text, isolated object, high quality, digital art, sticker design, die-cut sticker`;
+
+      callPromises.push(
+        replicate.predictions.create({
+          model: "black-forest-labs/flux-schnell",
+          input: {
+            prompt: fullPrompt,
+            num_outputs: outputsThisCall,
+            aspect_ratio: "1:1",
+            output_format: "png",
+            output_quality: 90,
+          },
+        }).then((prediction) => replicate.wait(prediction))
+      );
+    }
+
+    const predictions = await Promise.all(callPromises);
+
     const results: string[] = [];
-
-    for (let i = 0; i < stickerCount; i++) {
-      if (i > 0) {
-        await new Promise((resolve) =>
-          setTimeout(resolve, DELAY_BETWEEN_REQUESTS_MS)
-        );
-      }
-
-      const fullPrompt = `A sticker of ${variedPrompts[i]}, ${styleModifier}, pure white background, no text, isolated object, high quality, digital art, sticker design, die-cut sticker`;
-
-      const prediction = await replicate.predictions.create({
-        model: "black-forest-labs/flux-schnell",
-        input: {
-          prompt: fullPrompt,
-          num_outputs: 1,
-          aspect_ratio: "1:1",
-          output_format: "png",
-          output_quality: 90,
-        },
-      });
-
-      const finalPrediction = await replicate.wait(prediction);
-
+    for (const finalPrediction of predictions) {
       if (
         finalPrediction.output &&
         Array.isArray(finalPrediction.output)
