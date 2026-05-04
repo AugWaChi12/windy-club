@@ -13,6 +13,11 @@ const STYLES = [
   { id: "comic", label: "Comic", emoji: "💥", desc: "การ์ตูนตะวันตก", color: "from-amber-400 to-orange-400" },
   { id: "minimal", label: "Minimal", emoji: "◽", desc: "เรียบง่าย สะอาด", color: "from-gray-400 to-slate-400" },
   { id: "pixel", label: "Pixel", emoji: "👾", desc: "พิกเซลอาร์ท เรโทร", color: "from-emerald-400 to-teal-400" },
+  { id: "watercolor", label: "Watercolor", emoji: "🎨", desc: "สีน้ำ นุ่มนวล", color: "from-cyan-400 to-sky-400" },
+  { id: "retro", label: "Retro", emoji: "🌈", desc: "ย้อนยุค 70s groovy", color: "from-orange-400 to-red-400" },
+  { id: "doodle", label: "Doodle", emoji: "✏️", desc: "วาดมือ ขีดเขียน", color: "from-stone-400 to-neutral-500" },
+  { id: "threed", label: "3D Clay", emoji: "🧸", desc: "3D น่ารัก สไตล์ Pixar", color: "from-violet-400 to-purple-400" },
+  { id: "neon", label: "Neon", emoji: "💡", desc: "นีออนเรืองแสง", color: "from-fuchsia-400 to-pink-500" },
 ];
 
 export default function CreatePage() {
@@ -203,24 +208,24 @@ export default function CreatePage() {
 
             {/* Style */}
             <div>
-              <p className="text-xs font-semibold text-muted mb-2 uppercase tracking-wider">Style</p>
-              <div className="grid grid-cols-2 gap-2">
+              <p className="text-xs font-semibold text-muted mb-2 uppercase tracking-wider">Style ({STYLES.length})</p>
+              <div className="grid grid-cols-2 gap-2 max-h-[280px] overflow-y-auto pr-1 scrollbar-thin">
                 {STYLES.map((s) => (
                   <button
                     key={s.id}
                     onClick={() => setStyle(s.id)}
-                    className={`flex items-center gap-2.5 px-3 py-3 rounded-xl border text-left transition-all ${
+                    className={`flex items-center gap-2 px-2.5 py-2.5 rounded-xl border text-left transition-all ${
                       style === s.id
-                        ? "border-violet-500 bg-violet-500/10 dark:bg-violet-500/15 ring-2 ring-violet-500/30 shadow-sm"
+                        ? "border-violet-500 bg-violet-500/10 dark:bg-violet-500/15 ring-2 ring-violet-500/30 shadow-sm scale-[1.02]"
                         : "border-card-border bg-card hover:border-violet-300 dark:hover:border-violet-700 hover:shadow-sm"
                     }`}
                   >
-                    <span className={`text-xl w-8 h-8 flex items-center justify-center rounded-lg bg-gradient-to-br ${s.color} text-white text-sm`}>
+                    <span className={`text-lg w-7 h-7 flex items-center justify-center rounded-lg bg-gradient-to-br ${s.color} text-white text-xs shrink-0`}>
                       {s.emoji}
                     </span>
-                    <div>
+                    <div className="min-w-0">
                       <p className={`text-xs font-semibold ${style === s.id ? "text-violet-600 dark:text-violet-400" : "text-foreground"}`}>{s.label}</p>
-                      <p className="text-[10px] text-muted">{s.desc}</p>
+                      <p className="text-[10px] text-muted truncate">{s.desc}</p>
                     </div>
                   </button>
                 ))}

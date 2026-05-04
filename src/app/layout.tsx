@@ -15,7 +15,23 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Windy Club — AI Sticker Creator",
-  description: "สร้าง Sticker สุดน่ารักด้วย AI ง่ายๆ แค่พิมพ์",
+  description: "สร้าง Sticker สุดน่ารักด้วย AI ง่ายๆ แค่พิมพ์ รองรับภาษาไทย 10 สไตล์ ฟรี 3 ครั้ง/วัน",
+  keywords: ["AI sticker", "สร้าง sticker", "sticker maker", "AI art", "kawaii sticker", "Windy Club"],
+  authors: [{ name: "Windy Club" }],
+  openGraph: {
+    title: "Windy Club — AI Sticker Creator",
+    description: "สร้าง Sticker สุดน่ารักด้วย AI ง่ายๆ แค่พิมพ์ ฟรี!",
+    url: "https://windy-club.com",
+    siteName: "Windy Club",
+    locale: "th_TH",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Windy Club — AI Sticker Creator",
+    description: "สร้าง Sticker ด้วย AI ใน 1 วินาที 🎨",
+  },
+  robots: { index: true, follow: true },
 };
 
 export default function RootLayout({

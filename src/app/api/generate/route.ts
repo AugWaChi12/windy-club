@@ -15,6 +15,11 @@ const STYLE_PROMPTS: Record<string, string> = {
   minimal: "minimalist flat design sticker, thin uniform outlines, solid flat colors, geometric simple shapes, no shadows no gradients, consistent 2D vector look",
   anime: "anime manga sticker, clean uniform black outlines, flat cel-shaded coloring, big expressive eyes, Japanese illustration style, consistent 2D anime look",
   pixel: "pixel art sticker, crisp 16-bit retro style, limited color palette, sharp pixel edges, no anti-aliasing, consistent retro game sprite look",
+  watercolor: "watercolor painting sticker, soft wet edges, translucent color washes, gentle brush strokes, delicate floral tones, artistic watercolor illustration on white background",
+  retro: "vintage retro 70s sticker, groovy psychedelic colors, thick rounded typography style, warm sunset palette, disco era aesthetic, nostalgic vintage illustration",
+  doodle: "hand-drawn doodle sticker, sketchy pen ink lines, casual notebook scribble style, black ink on white, playful imperfect hand-drawn look, simple fun doodle art",
+  threed: "3D rendered cute sticker, soft clay render, smooth rounded surfaces, subtle shadows, Pixar-style 3D character, glossy plastic toy look, isometric 3D illustration",
+  neon: "neon glow sticker, vibrant glowing neon outlines, dark background with bright electric colors, cyberpunk neon sign aesthetic, glowing LED light art style",
 };
 
 const FREE_DAILY_LIMIT = 3;

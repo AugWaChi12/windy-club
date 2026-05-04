@@ -16,19 +16,24 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ ads: [] });
   }
 
-  // Track impression count (fire and forget)
+  // Increment impressions (simple approach, fire and forget)
   if (ads && ads.length > 0) {
     for (const ad of ads) {
       supabaseAdmin
         .from("ads")
-        .update({ impressions: undefined }) // will use RPC instead
+        .select("impressions")
         .eq("id", ad.id)
-        .then(() => {});
+        .single()
+        .then(({ data }) => {
+          if (data) {
+            supabaseAdmin
+              .from("ads")
+              .update({ impressions: (data.impressions || 0) + 1 })
+              .eq("id", ad.id)
+              .then(() => {});
+          }
+        });
     }
-    // Increment impressions via raw update
-    supabaseAdmin.rpc("increment_ad_impressions", {
-      ad_ids: ads.map((a) => a.id),
-    }).catch(() => {});
   }
 
   return NextResponse.json({ ads: ads || [] });
@@ -54,6 +59,17 @@ export async function POST(request: NextRequest) {
 
   if (!title || !image_url || !link_url || !position) {
     return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+  }
+
+  // Validate URLs to prevent XSS via malicious protocols
+  const ALLOWED_URL_PATTERN = /^https?:\/\//;
+  if (!ALLOWED_URL_PATTERN.test(image_url) || !ALLOWED_URL_PATTERN.test(link_url)) {
+    return NextResponse.json({ error: "URLs must start with http:// or https://" }, { status: 400 });
+  }
+
+  const VALID_POSITIONS = ["home-hero", "create-top", "create-bottom"];
+  if (!VALID_POSITIONS.includes(position)) {
+    return NextResponse.json({ error: "Invalid position" }, { status: 400 });
   }
 
   const { data, error } = await supabaseAdmin

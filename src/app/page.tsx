@@ -115,8 +115,8 @@ export default function Home() {
             </div>
             <div className="animate-fade-in-up stagger-2 opacity-0 rounded-2xl border border-card-border bg-card p-5 space-y-2 hover:shadow-lg hover:border-violet-300 dark:hover:border-violet-700 hover:scale-[1.02] transition-all group cursor-default">
               <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-pink-400 to-rose-500 flex items-center justify-center text-lg group-hover:animate-wiggle transition-transform shadow-md shadow-pink-200/50 dark:shadow-pink-900/30">🎭</div>
-              <h3 className="text-sm font-semibold">5 Styles</h3>
-              <p className="text-xs text-muted">Kawaii, Anime, Comic, Minimal, Pixel</p>
+              <h3 className="text-sm font-semibold">10 Styles</h3>
+              <p className="text-xs text-muted">Kawaii, Anime, 3D Clay, Neon, Watercolor...</p>
             </div>
             <div className="animate-fade-in-up stagger-3 opacity-0 rounded-2xl border border-card-border bg-card p-5 space-y-2 hover:shadow-lg hover:border-violet-300 dark:hover:border-violet-700 hover:scale-[1.02] transition-all group cursor-default">
               <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center text-lg group-hover:animate-wiggle transition-transform shadow-md shadow-emerald-200/50 dark:shadow-emerald-900/30">♾️</div>
