@@ -11,6 +11,94 @@ interface Ad {
 }
 
 const ROTATION_INTERVAL_MS = 5000;
+const HOUSE_AD_ROTATION_MS = 6000;
+
+// Default house ads shown when no real ads exist
+const HOUSE_ADS = [
+  {
+    id: "house-pro",
+    gradient: "from-violet-500 via-fuchsia-500 to-pink-500",
+    emoji: "⭐",
+    title: "อัปเกรด Pro",
+    desc: "สร้างได้ 30 รูป/วัน + Batch 4 รูป + ไม่มีโฆษณา",
+    cta: "฿199/เดือน →",
+    href: "/create",
+  },
+  {
+    id: "house-animate",
+    gradient: "from-amber-400 via-orange-500 to-red-500",
+    emoji: "🎬",
+    title: "Animated Sticker ใหม่!",
+    desc: "เปลี่ยน Sticker ของคุณให้เป็นวิดีโอเคลื่อนไหว — Pro เท่านั้น",
+    cta: "ลองเลย →",
+    href: "/create",
+  },
+  {
+    id: "house-styles",
+    gradient: "from-emerald-400 via-teal-500 to-cyan-500",
+    emoji: "🎨",
+    title: "10 Styles ให้เลือก",
+    desc: "Kawaii · Anime · 3D Clay · Neon · Pixel · Watercolor · อื่นๆ",
+    cta: "สร้างฟรี →",
+    href: "/create",
+  },
+  {
+    id: "house-advertise",
+    gradient: "from-blue-400 via-indigo-500 to-violet-500",
+    emoji: "📢",
+    title: "ลงโฆษณากับ Windy Club",
+    desc: "เข้าถึงกลุ่มเป้าหมายชอบ AI + ความน่ารัก — เริ่ม ฿500/สัปดาห์",
+    cta: "ดูรายละเอียด →",
+    href: "/advertise",
+  },
+];
+
+function HouseAdBanner({ className = "" }: { className?: string }) {
+  const [index, setIndex] = useState(() => Math.floor(Math.random() * HOUSE_ADS.length));
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setIndex((prev) => (prev + 1) % HOUSE_ADS.length);
+    }, HOUSE_AD_ROTATION_MS);
+    return () => clearInterval(interval);
+  }, []);
+
+  const ad = HOUSE_ADS[index];
+
+  return (
+    <div className={`ad-slot ad-slot-banner overflow-hidden relative ${className}`}>
+      <Link href={ad.href} className="block w-full">
+        <div
+          className={`w-full rounded-xl bg-gradient-to-r ${ad.gradient} p-[1px] transition-all duration-500`}
+        >
+          <div className="w-full rounded-xl bg-background/90 dark:bg-background/80 backdrop-blur-sm px-4 py-2.5 flex items-center gap-3">
+            <span className="text-2xl shrink-0">{ad.emoji}</span>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-bold text-foreground truncate">{ad.title}</p>
+              <p className="text-[10px] text-muted truncate">{ad.desc}</p>
+            </div>
+            <span
+              className={`shrink-0 text-[10px] font-bold bg-gradient-to-r ${ad.gradient} text-white px-3 py-1 rounded-full whitespace-nowrap`}
+            >
+              {ad.cta}
+            </span>
+          </div>
+        </div>
+      </Link>
+      {/* Rotation dots */}
+      <div className="absolute bottom-1 left-1/2 -translate-x-1/2 flex gap-1">
+        {HOUSE_ADS.map((_, idx) => (
+          <span
+            key={idx}
+            className={`w-1 h-1 rounded-full transition-all ${
+              idx === index ? "bg-violet-500 w-2.5" : "bg-foreground/15"
+            }`}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
 
 export function AdBanner({
   position,
@@ -62,19 +150,9 @@ export function AdBanner({
   // Pro users: no ads
   if (isPro) return null;
 
-  // No ads available: show placeholder with advertise link
+  // No ads available: show house ads
   if (loaded && ads.length === 0) {
-    return (
-      <div className={`ad-slot ad-slot-banner ${className}`}>
-        <Link
-          href="/advertise"
-          className="flex items-center gap-2 text-xs text-muted/60 hover:text-violet-500 transition-colors"
-        >
-          <span>📢</span>
-          <span>ลงโฆษณาที่นี่</span>
-        </Link>
-      </div>
-    );
+    return <HouseAdBanner className={className} />;
   }
 
   if (!loaded || ads.length === 0) return null;
