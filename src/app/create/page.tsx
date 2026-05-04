@@ -414,15 +414,30 @@ export default function CreatePage() {
               )}
             </div>
 
-            {/* Ad slot - top of gallery */}
-            <AdBanner position="create-top" isPro={isPro} />
-
             {gallery.length === 0 && !loading ? (
-              <div className="flex items-center justify-center h-60 rounded-2xl border-2 border-dashed border-card-border bg-card/50 decoration-dots">
-                <div className="text-center space-y-3 animate-fade-in">
-                  <p className="text-5xl animate-float">🎨</p>
-                  <p className="text-sm text-muted">พิมพ์อะไรสักอย่างแล้วกด Generate</p>
-                  <p className="text-xs text-muted/60">Sticker จะแสดงตรงนี้ ✨</p>
+              <div className="flex flex-col items-center justify-center rounded-2xl border border-card-border bg-card/30 p-8 min-h-[320px]">
+                <div className="text-center space-y-4 animate-fade-in">
+                  {/* Sample sticker grid preview */}
+                  <div className="flex justify-center gap-3 mb-2">
+                    <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-pink-200 to-pink-100 dark:from-pink-900/30 dark:to-pink-800/20 border border-pink-200/50 dark:border-pink-800/30 flex items-center justify-center text-xl animate-float stagger-1 shadow-sm">🐱</div>
+                    <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-violet-200 to-violet-100 dark:from-violet-900/30 dark:to-violet-800/20 border border-violet-200/50 dark:border-violet-800/30 flex items-center justify-center text-xl animate-float stagger-2 shadow-sm">🦊</div>
+                    <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-amber-200 to-amber-100 dark:from-amber-900/30 dark:to-amber-800/20 border border-amber-200/50 dark:border-amber-800/30 flex items-center justify-center text-xl animate-float stagger-3 shadow-sm">🐻</div>
+                    <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-emerald-200 to-emerald-100 dark:from-emerald-900/30 dark:to-emerald-800/20 border border-emerald-200/50 dark:border-emerald-800/30 flex items-center justify-center text-xl animate-float stagger-4 shadow-sm">🐸</div>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-foreground">สร้าง Sticker สุดน่ารักด้วย AI</p>
+                    <p className="text-xs text-muted mt-1">พิมพ์อะไรก็ได้ทางซ้าย แล้วกดสร้าง — ผลลัพธ์จะแสดงที่นี่</p>
+                  </div>
+                  <div className="flex flex-wrap justify-center gap-2 pt-1">
+                    <span className="text-[10px] px-2.5 py-1 rounded-full bg-pink-50 dark:bg-pink-500/10 text-pink-600 dark:text-pink-300 border border-pink-200/50 dark:border-pink-800/30">🌸 Kawaii</span>
+                    <span className="text-[10px] px-2.5 py-1 rounded-full bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-300 border border-blue-200/50 dark:border-blue-800/30">⚔️ Anime</span>
+                    <span className="text-[10px] px-2.5 py-1 rounded-full bg-violet-50 dark:bg-violet-500/10 text-violet-600 dark:text-violet-300 border border-violet-200/50 dark:border-violet-800/30">🧸 3D Clay</span>
+                    <span className="text-[10px] px-2.5 py-1 rounded-full bg-fuchsia-50 dark:bg-fuchsia-500/10 text-fuchsia-600 dark:text-fuchsia-300 border border-fuchsia-200/50 dark:border-fuchsia-800/30">💡 Neon</span>
+                  </div>
+                </div>
+                {/* House ad at bottom of empty state */}
+                <div className="w-full mt-6 pt-4 border-t border-card-border/50">
+                  <AdBanner position="create-top" isPro={isPro} />
                 </div>
               </div>
             ) : (
@@ -504,8 +519,13 @@ export default function CreatePage() {
               </div>
             )}
 
-            {/* Ad slot - bottom of gallery */}
-            {gallery.length > 0 && <AdBanner position="create-bottom" isPro={isPro} />}
+            {/* Ad slot - above & below gallery */}
+            {gallery.length > 0 && (
+              <>
+                <AdBanner position="create-top" isPro={isPro} />
+                <AdBanner position="create-bottom" isPro={isPro} />
+              </>
+            )}
           </div>
         </div>
       </main>
