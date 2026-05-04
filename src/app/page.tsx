@@ -157,7 +157,13 @@ export default function Home() {
       <footer className="relative z-10 py-6 text-center text-xs text-muted border-t border-card-border space-y-1">
         <p>© 2026 Windy Club — AI Sticker Creator</p>
         <p className="text-muted/50">Made with 💜 in Thailand</p>
-        <Link href="/advertise" className="inline-block text-violet-500 hover:underline mt-1">📢 ลงโฆษณากับเรา</Link>
+        <div className="flex items-center justify-center gap-3 mt-2">
+          <Link href="/advertise" className="text-violet-500 hover:underline">📢 ลงโฆษณากับเรา</Link>
+          <span className="text-card-border">•</span>
+          <Link href="/privacy" className="hover:underline">Privacy</Link>
+          <span className="text-card-border">•</span>
+          <Link href="/terms" className="hover:underline">Terms</Link>
+        </div>
       </footer>
     </div>
   );

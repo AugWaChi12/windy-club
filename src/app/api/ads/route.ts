@@ -36,7 +36,14 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  return NextResponse.json({ ads: ads || [] });
+  return NextResponse.json(
+    { ads: ads || [] },
+    {
+      headers: {
+        "Cache-Control": "public, s-maxage=30, stale-while-revalidate=60",
+      },
+    }
+  );
 }
 
 // POST /api/ads — create new ad (admin only)

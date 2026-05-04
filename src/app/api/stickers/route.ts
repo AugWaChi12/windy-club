@@ -30,7 +30,14 @@ export async function GET() {
       return data.publicUrl;
     });
 
-  return NextResponse.json({ images });
+  return NextResponse.json(
+    { images },
+    {
+      headers: {
+        "Cache-Control": "private, s-maxage=10, stale-while-revalidate=30",
+      },
+    }
+  );
 }
 
 // DELETE /api/stickers — remove a sticker by its public URL

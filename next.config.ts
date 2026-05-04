@@ -18,6 +18,14 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  // Performance: compress responses
+  compress: true,
+  // Performance: enable React strict mode for catching issues
+  reactStrictMode: true,
+  // Performance: reduce bundle size
+  experimental: {
+    optimizePackageImports: ["@supabase/supabase-js"],
+  },
 };
 
 export default nextConfig;
