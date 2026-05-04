@@ -252,16 +252,16 @@ export default function CreatePage() {
         </div>
       </header>
 
-      <main className="flex-1 max-w-6xl mx-auto w-full px-4 py-8 mesh-gradient">
-        <div className="grid grid-cols-1 lg:grid-cols-[380px_1fr] gap-10">
+      <main className="flex-1 max-w-6xl mx-auto w-full px-4 py-6 mesh-gradient">
+        <div className="grid grid-cols-1 lg:grid-cols-[360px_1fr] gap-8">
 
           {/* Left Panel */}
-          <div className="space-y-6">
+          <div className="space-y-5">
             <div className="animate-fade-in-up">
-              <h1 className="text-3xl font-bold mb-2">
+              <h1 className="text-2xl font-bold mb-1">
                 <span className="inline-block animate-wiggle">🎨</span> สร้าง <span className="bg-gradient-to-r from-violet-500 to-fuchsia-500 bg-clip-text text-transparent">Sticker</span>
               </h1>
-              <p className="text-sm text-muted">พิมพ์อะไรก็ได้ AI จะสร้างให้ทันที</p>
+              <p className="text-xs text-muted">พิมพ์อะไรก็ได้ AI จะสร้างให้ทันที</p>
             </div>
 
             {/* Prompt */}
@@ -270,7 +270,7 @@ export default function CreatePage() {
                 value={prompt}
                 onChange={(e) => setPrompt(e.target.value)}
                 placeholder="เช่น แมวส้มอ้วนๆ กำลังกินราเมน..."
-                className="w-full h-32 rounded-2xl border border-card-border bg-card px-5 py-4 text-sm text-foreground placeholder-muted focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent resize-none transition-all hover:border-violet-300 dark:hover:border-violet-700"
+                className="w-full h-24 rounded-2xl border border-card-border bg-card px-4 py-3 text-sm text-foreground placeholder-muted focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent resize-none transition-all hover:border-violet-300 dark:hover:border-violet-700"
                 maxLength={200}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && !e.shiftKey && !loading) {
@@ -284,13 +284,13 @@ export default function CreatePage() {
 
             {/* Style */}
             <div className="animate-fade-in-up stagger-2">
-              <p className="text-xs font-semibold text-muted mb-3 uppercase tracking-wider">Style ({STYLES.length})</p>
-              <div className="grid grid-cols-2 gap-2.5 max-h-[300px] overflow-y-auto pr-1 scrollbar-thin">
+              <p className="text-xs font-semibold text-muted mb-2 uppercase tracking-wider">Style ({STYLES.length})</p>
+              <div className="grid grid-cols-2 gap-2 max-h-[240px] overflow-y-auto pr-1 scrollbar-thin">
                 {STYLES.map((s) => (
                   <button
                     key={s.id}
                     onClick={() => setStyle(s.id)}
-                    className={`flex items-center gap-2.5 px-3 py-3 rounded-xl border text-left transition-all hover:scale-[1.03] active:scale-95 ${
+                    className={`flex items-center gap-2 px-2.5 py-2.5 rounded-xl border text-left transition-all hover:scale-[1.03] active:scale-95 ${
                       style === s.id
                         ? "border-violet-500 bg-violet-500/10 dark:bg-violet-500/15 ring-2 ring-violet-500/30 shadow-md scale-[1.02]"
                         : "border-card-border bg-card hover:border-violet-300 dark:hover:border-violet-700 hover:shadow-md"
@@ -310,7 +310,7 @@ export default function CreatePage() {
 
             {/* Batch Count */}
             <div className="animate-fade-in-up stagger-3">
-              <label className="block text-xs font-semibold text-foreground mb-3">
+              <label className="block text-xs font-semibold text-foreground mb-2">
                 จำนวนรูป
                 {remaining !== null && dailyLimit !== null && (
                   <span className="ml-2 text-muted font-normal">
@@ -318,13 +318,13 @@ export default function CreatePage() {
                   </span>
                 )}
               </label>
-              <div className="flex gap-3">
+              <div className="flex gap-2">
                 {[1, 2, 3, 4].map((n) => (
                   <button
                     key={n}
                     onClick={() => setCount(n)}
                     disabled={n > 2 && !showUpgrade && remaining !== null && remaining < n}
-                    className={`flex-1 py-2.5 rounded-xl text-sm font-bold transition-all border hover:scale-105 active:scale-95 ${
+                    className={`flex-1 py-2 rounded-xl text-sm font-bold transition-all border hover:scale-105 active:scale-95 ${
                       count === n
                         ? "bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white border-transparent shadow-lg shadow-violet-500/20"
                         : "bg-card border-card-border text-foreground hover:border-fuchsia-400/50 hover:shadow-md"
@@ -345,7 +345,7 @@ export default function CreatePage() {
             <button
               onClick={handleGenerate}
               disabled={loading || !prompt.trim()}
-              className="w-full rounded-2xl bg-gradient-to-r from-violet-500 via-fuchsia-500 to-pink-500 px-6 py-4 text-base font-bold text-white hover:shadow-xl hover:shadow-fuchsia-500/30 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:shadow-none disabled:hover:scale-100 animate-fade-in-up stagger-4 glow-violet"
+              className="w-full rounded-2xl bg-gradient-to-r from-violet-500 via-fuchsia-500 to-pink-500 px-6 py-3.5 text-sm font-bold text-white hover:shadow-xl hover:shadow-fuchsia-500/30 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:shadow-none disabled:hover:scale-100 animate-fade-in-up stagger-4 glow-violet"
             >
               {loading ? (
                 <span className="flex items-center justify-center gap-2">
@@ -388,7 +388,7 @@ export default function CreatePage() {
           </div>
 
           {/* Right Panel - Gallery */}
-          <div className="space-y-4">
+          <div className="space-y-3">
             <div className="flex items-center justify-between">
               <h2 className="text-sm font-semibold text-muted">
                 {gallery.length > 0 ? (
@@ -415,10 +415,10 @@ export default function CreatePage() {
             </div>
 
             {/* Ad slot - top of gallery */}
-            <AdBanner position="create-top" isPro={isPro} className="mb-4" />
+            <AdBanner position="create-top" isPro={isPro} />
 
             {gallery.length === 0 && !loading ? (
-              <div className="flex items-center justify-center h-72 rounded-2xl border-2 border-dashed border-card-border bg-card/50 decoration-dots">
+              <div className="flex items-center justify-center h-60 rounded-2xl border-2 border-dashed border-card-border bg-card/50 decoration-dots">
                 <div className="text-center space-y-3 animate-fade-in">
                   <p className="text-5xl animate-float">🎨</p>
                   <p className="text-sm text-muted">พิมพ์อะไรสักอย่างแล้วกด Generate</p>
@@ -505,7 +505,7 @@ export default function CreatePage() {
             )}
 
             {/* Ad slot - bottom of gallery */}
-            <AdBanner position="create-bottom" isPro={isPro} className="mt-4" />
+            {gallery.length > 0 && <AdBanner position="create-bottom" isPro={isPro} />}
           </div>
         </div>
       </main>

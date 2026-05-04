@@ -66,36 +66,25 @@ function HouseAdBanner({ className = "" }: { className?: string }) {
   const ad = HOUSE_ADS[index];
 
   return (
-    <div className={`ad-slot ad-slot-banner overflow-hidden relative ${className}`}>
+    <div className={`ad-slot overflow-hidden relative ${className}`}>
       <Link href={ad.href} className="block w-full">
         <div
           className={`w-full rounded-xl bg-gradient-to-r ${ad.gradient} p-[1px] transition-all duration-500`}
         >
-          <div className="w-full rounded-xl bg-background/90 dark:bg-background/80 backdrop-blur-sm px-4 py-2.5 flex items-center gap-3">
-            <span className="text-2xl shrink-0">{ad.emoji}</span>
+          <div className="w-full rounded-xl bg-background/90 dark:bg-background/80 backdrop-blur-sm px-3 py-2 flex items-center gap-2.5">
+            <span className="text-lg shrink-0">{ad.emoji}</span>
             <div className="flex-1 min-w-0">
-              <p className="text-xs font-bold text-foreground truncate">{ad.title}</p>
-              <p className="text-[10px] text-muted truncate">{ad.desc}</p>
+              <p className="text-[11px] font-bold text-foreground truncate">{ad.title}</p>
+              <p className="text-[10px] text-muted truncate hidden sm:block">{ad.desc}</p>
             </div>
             <span
-              className={`shrink-0 text-[10px] font-bold bg-gradient-to-r ${ad.gradient} text-white px-3 py-1 rounded-full whitespace-nowrap`}
+              className={`shrink-0 text-[10px] font-bold bg-gradient-to-r ${ad.gradient} text-white px-2.5 py-0.5 rounded-full whitespace-nowrap`}
             >
               {ad.cta}
             </span>
           </div>
         </div>
       </Link>
-      {/* Rotation dots */}
-      <div className="absolute bottom-1 left-1/2 -translate-x-1/2 flex gap-1">
-        {HOUSE_ADS.map((_, idx) => (
-          <span
-            key={idx}
-            className={`w-1 h-1 rounded-full transition-all ${
-              idx === index ? "bg-violet-500 w-2.5" : "bg-foreground/15"
-            }`}
-          />
-        ))}
-      </div>
     </div>
   );
 }
