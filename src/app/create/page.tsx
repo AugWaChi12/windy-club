@@ -324,10 +324,10 @@ export default function CreatePage() {
           {/* Left Panel */}
           <div className="space-y-5">
             <div className="animate-fade-in-up">
-              <h1 className="text-2xl font-bold mb-1">
-                <span className="inline-block animate-wiggle">🎨</span> สร้าง <span className="bg-gradient-to-r from-violet-500 to-fuchsia-500 bg-clip-text text-transparent">Sticker</span>
+              <h1 className="text-3xl font-extrabold mb-1 tracking-tight">
+                <span className="inline-block animate-wiggle">🎨</span> สร้าง <span className="bg-gradient-to-r from-violet-500 via-fuchsia-500 to-pink-500 bg-clip-text text-transparent">Sticker</span>
               </h1>
-              <p className="text-xs text-muted">พิมพ์อะไรก็ได้ AI จะสร้างให้ทันที</p>
+              <p className="text-xs text-muted">พิมพ์อะไรก็ได้ AI จะสร้างให้ทันที ✨</p>
             </div>
 
             {/* Prompt */}
@@ -336,7 +336,7 @@ export default function CreatePage() {
                 value={prompt}
                 onChange={(e) => setPrompt(e.target.value)}
                 placeholder="เช่น แมวส้มอ้วนๆ กำลังกินราเมน..."
-                className="w-full h-24 rounded-2xl border border-card-border bg-card px-4 py-3 text-sm text-foreground placeholder-muted focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent resize-none transition-all hover:border-violet-300 dark:hover:border-violet-700"
+                className="w-full h-24 rounded-2xl border-2 border-card-border bg-card px-4 py-3 text-sm text-foreground placeholder-muted focus:outline-none focus:ring-2 focus:ring-violet-500/50 focus:border-violet-500 resize-none transition-all hover:border-violet-300 dark:hover:border-violet-700 shadow-sm"
                 maxLength={200}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && !e.shiftKey && !loading) {
@@ -404,10 +404,10 @@ export default function CreatePage() {
             {/* Batch Count */}
             <div className="animate-fade-in-up stagger-3">
               <label className="block text-xs font-semibold text-foreground mb-2">
-                จำนวนรูป
+                🎯 จำนวนรูป
                 {remaining !== null && dailyLimit !== null && (
-                  <span className="ml-2 text-muted font-normal">
-                    (เหลือ {remaining}/{dailyLimit} วันนี้)
+                  <span className={`ml-2 font-normal ${remaining <= 3 ? "text-orange-500" : "text-muted"}`}>
+                    ({remaining}/{dailyLimit} เหลือวันนี้)
                   </span>
                 )}
               </label>
@@ -438,8 +438,9 @@ export default function CreatePage() {
             <button
               onClick={handleGenerate}
               disabled={loading || !prompt.trim()}
-              className="w-full rounded-2xl bg-gradient-to-r from-violet-500 via-fuchsia-500 to-pink-500 px-6 py-3.5 text-sm font-bold text-white hover:shadow-xl hover:shadow-fuchsia-500/30 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:shadow-none disabled:hover:scale-100 animate-fade-in-up stagger-4 glow-violet"
+              className="group/btn w-full rounded-2xl bg-gradient-to-r from-violet-600 via-fuchsia-500 to-pink-500 px-6 py-4 text-sm font-bold text-white shadow-lg shadow-fuchsia-500/25 hover:shadow-2xl hover:shadow-fuchsia-500/40 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:shadow-none disabled:hover:scale-100 animate-fade-in-up stagger-4 relative overflow-hidden"
             >
+              <span className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-200%] group-hover/btn:translate-x-[200%] transition-transform duration-700" />
               {loading ? (
                 <span className="flex items-center justify-center gap-2">
                   <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
@@ -480,13 +481,13 @@ export default function CreatePage() {
             )}
           </div>
 
-          {/* Right Panel - Gallery */}
+          {/* Right Panel - Sticker Sheet */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <h2 className="text-sm font-semibold text-muted">
+              <h2 className="text-sm font-semibold text-foreground">
                 {gallery.length > 0 ? (
-                  <>🖼 Sticker ของคุณ <span className="inline-flex items-center justify-center bg-violet-100 dark:bg-violet-500/20 text-violet-700 dark:text-violet-300 rounded-full px-2 py-0.5 text-[10px] font-bold ml-1">{gallery.length}</span></>
-                ) : "Sticker จะแสดงที่นี่"}
+                  <>✂️ Sticker Sheet <span className="inline-flex items-center justify-center bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white rounded-full px-2.5 py-0.5 text-[10px] font-bold ml-1.5 shadow-sm">{gallery.length}</span></>
+                ) : "✨ Sticker จะแสดงที่นี่"}
               </h2>
               {gallery.length > 0 && (
                 <button
@@ -534,9 +535,9 @@ export default function CreatePage() {
                 </div>
               </div>
             ) : (
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-3 gap-4 p-2">
                 {loading && Array.from({ length: count }).map((_, i) => (
-                  <div key={`loading-${i}`} className="aspect-square rounded-2xl border-2 border-dashed border-violet-300 dark:border-violet-700 bg-violet-50 dark:bg-violet-500/5 flex items-center justify-center animate-scale-in" style={{ animationDelay: `${i * 0.06}s` }}>
+                  <div key={`loading-${i}`} className="sticker-card aspect-square rounded-2xl border-2 border-dashed border-violet-300 dark:border-violet-700 bg-violet-50 dark:bg-violet-500/5 flex items-center justify-center animate-scale-in" style={{ animationDelay: `${i * 0.06}s` }}>
                     <div className="text-center space-y-2">
                       <div className="text-2xl animate-bounce-soft" style={{ animationDelay: `${i * 0.15}s` }}>{["✨", "🎨", "🌟", "💫", "🪄", "⭐", "🎭", "🌈", "🎪"][i % 9]}</div>
                       <div className="inline-block animate-spin h-4 w-4 border-2 border-violet-500 border-t-transparent rounded-full" />
@@ -546,12 +547,16 @@ export default function CreatePage() {
                 ))}
                 {gallery.map((img, idx) => {
                   const isVideo = img.endsWith(".mp4") || img.endsWith(".webm");
+                  const rotations = [-2, 1.5, -1, 2, -1.5, 0.5, -2.5, 1, -0.5];
+                  const rotation = rotations[idx % rotations.length];
                   return (
                   <div
                     key={`${img}-${idx}`}
-                    className="gallery-item group relative aspect-square rounded-2xl border border-card-border overflow-hidden bg-white dark:bg-zinc-900 hover:shadow-xl hover:shadow-violet-500/15 hover:border-violet-400 dark:hover:border-violet-600 hover:scale-[1.05] hover:-rotate-1 active:scale-95 transition-all cursor-pointer"
-                    style={{ animationDelay: `${idx * 0.08}s` }}
+                    className="gallery-item sticker-card group relative aspect-square rounded-2xl border border-card-border/50 overflow-hidden bg-white dark:bg-zinc-900 hover:shadow-2xl hover:shadow-violet-500/20 hover:border-violet-400 dark:hover:border-violet-600 hover:scale-[1.08] active:scale-95 transition-all cursor-pointer"
+                    style={{ animationDelay: `${idx * 0.08}s`, transform: `rotate(${rotation}deg)` }}
                     onClick={() => setLightboxIndex(idx)}
+                    onMouseEnter={(e) => { e.currentTarget.style.transform = "rotate(0deg) scale(1.08)"; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.transform = `rotate(${rotation}deg)`; }}
                   >
                     {isVideo ? (
                       <video
@@ -560,7 +565,7 @@ export default function CreatePage() {
                         loop
                         muted
                         playsInline
-                        className="w-full h-full object-cover transition-transform group-hover:scale-110"
+                        className="w-full h-full object-contain p-2 transition-transform group-hover:scale-105"
                       />
                     ) : (
                     <img
@@ -568,7 +573,7 @@ export default function CreatePage() {
                       alt={`Sticker ${idx + 1}`}
                       loading="lazy"
                       decoding="async"
-                      className="w-full h-full object-cover transition-transform group-hover:scale-110"
+                      className="w-full h-full object-contain p-2 transition-transform group-hover:scale-105"
                     />
                     )}
                     {isVideo && (
@@ -628,10 +633,10 @@ export default function CreatePage() {
       {/* Lightbox */}
       {lightboxIndex !== null && gallery[lightboxIndex] && (
         <div
-          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4"
+          className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4"
           onClick={() => setLightboxIndex(null)}
         >
-          <div className="relative max-w-2xl w-full max-h-[85vh] flex flex-col items-center" onClick={(e) => e.stopPropagation()}>
+          <div className="relative max-w-2xl w-full max-h-[85vh] flex flex-col items-center animate-scale-in" onClick={(e) => e.stopPropagation()}>
             {/* Close button */}
             <button
               onClick={() => setLightboxIndex(null)}
@@ -658,7 +663,8 @@ export default function CreatePage() {
               </button>
             )}
 
-            {/* Image/Video */}
+            {/* Image/Video with sticker feel */}
+            <div className="sticker-card bg-white dark:bg-zinc-900 rounded-3xl p-4 shadow-2xl shadow-violet-500/10">
             {(() => {
               const currentImg = gallery[lightboxIndex];
               const isVid = currentImg.endsWith(".mp4") || currentImg.endsWith(".webm");
@@ -669,16 +675,17 @@ export default function CreatePage() {
                   loop
                   muted
                   playsInline
-                  className="max-h-[70vh] w-auto rounded-2xl shadow-2xl"
+                  className="max-h-[65vh] w-auto rounded-2xl"
                 />
               ) : (
                 <img
                   src={currentImg}
                   alt={`Sticker ${lightboxIndex + 1}`}
-                  className="max-h-[70vh] w-auto rounded-2xl shadow-2xl"
+                  className="max-h-[65vh] w-auto rounded-2xl"
                 />
               );
             })()}
+            </div>
 
             {/* Action buttons */}
             <div className="flex gap-3 mt-4">
