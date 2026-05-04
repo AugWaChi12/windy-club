@@ -55,6 +55,13 @@ export default function AdminDashboardPage() {
       gradient: "from-violet-500 to-fuchsia-500",
     },
     {
+      href: "/admin/ad-requests",
+      icon: "📋",
+      title: "คำขอโฆษณา",
+      desc: "ตรวจสอบ, อนุมัติ/ปฏิเสธ คำขอจาก advertiser",
+      gradient: "from-emerald-500 to-teal-500",
+    },
+    {
       href: "/admin/ads",
       icon: "📢",
       title: "จัดการโฆษณา",
