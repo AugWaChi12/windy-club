@@ -22,7 +22,7 @@ export async function GET() {
   }
 
   const images = files
-    .filter((file) => !file.id.endsWith("/"))
+    .filter((file) => file.id && !file.id.endsWith("/"))
     .map((file) => {
       const { data } = supabaseAdmin.storage
         .from("stickers")
