@@ -57,6 +57,7 @@ export default function CreatePage() {
   const [dailyLimit, setDailyLimit] = useState<number | null>(null);
   const [isPro, setIsPro] = useState(false);
   const [animatingIndex, setAnimatingIndex] = useState<number | null>(null);
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
   const supabase = createClient();
 
@@ -508,6 +509,7 @@ export default function CreatePage() {
                     key={`${img}-${idx}`}
                     className="gallery-item group relative aspect-square rounded-2xl border border-card-border overflow-hidden bg-white dark:bg-zinc-900 hover:shadow-xl hover:shadow-violet-500/15 hover:border-violet-400 dark:hover:border-violet-600 hover:scale-[1.05] hover:-rotate-1 active:scale-95 transition-all cursor-pointer"
                     style={{ animationDelay: `${idx * 0.08}s` }}
+                    onClick={() => setLightboxIndex(idx)}
                   >
                     {isVideo ? (
                       <video
@@ -540,25 +542,25 @@ export default function CreatePage() {
                         </div>
                       </div>
                     )}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-center pb-3 gap-1.5">
+                    <div className="absolute inset-x-0 bottom-0 p-2 flex justify-center gap-1.5 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 sm:opacity-0 max-sm:opacity-100 transition-opacity">
                       <button
-                        onClick={() => handleDownload(img, idx)}
-                        className="opacity-0 group-hover:opacity-100 transition-all translate-y-1 group-hover:translate-y-0 bg-white text-black text-[11px] font-semibold px-3 py-1.5 rounded-full shadow-lg hover:bg-violet-50"
+                        onClick={(e) => { e.stopPropagation(); handleDownload(img, idx); }}
+                        className="bg-white text-black text-[11px] font-semibold px-3 py-1.5 rounded-full shadow-lg hover:bg-violet-50 active:scale-95 transition-all"
                       >
                         ⬇ Save
                       </button>
                       {!isVideo && (
                         <button
-                          onClick={() => handleAnimate(img, idx)}
+                          onClick={(e) => { e.stopPropagation(); handleAnimate(img, idx); }}
                           disabled={animatingIndex !== null}
-                          className="opacity-0 group-hover:opacity-100 transition-all translate-y-1 group-hover:translate-y-0 bg-gradient-to-r from-fuchsia-500 to-pink-500 text-white text-[11px] font-semibold px-3 py-1.5 rounded-full shadow-lg hover:opacity-90 disabled:opacity-40"
+                          className="bg-gradient-to-r from-fuchsia-500 to-pink-500 text-white text-[11px] font-semibold px-3 py-1.5 rounded-full shadow-lg hover:opacity-90 active:scale-95 disabled:opacity-40 transition-all"
                         >
                           🎬 Animate
                         </button>
                       )}
                       <button
-                        onClick={() => handleRemove(idx)}
-                        className="opacity-0 group-hover:opacity-100 transition-all translate-y-1 group-hover:translate-y-0 bg-red-500 text-white text-[11px] font-semibold px-3 py-1.5 rounded-full shadow-lg hover:bg-red-600"
+                        onClick={(e) => { e.stopPropagation(); handleRemove(idx); }}
+                        className="bg-red-500 text-white text-[11px] font-semibold px-3 py-1.5 rounded-full shadow-lg hover:bg-red-600 active:scale-95 transition-all"
                       >
                         ✕
                       </button>
@@ -579,6 +581,92 @@ export default function CreatePage() {
           </div>
         </div>
       </main>
+
+      {/* Lightbox */}
+      {lightboxIndex !== null && gallery[lightboxIndex] && (
+        <div
+          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4"
+          onClick={() => setLightboxIndex(null)}
+        >
+          <div className="relative max-w-2xl w-full max-h-[85vh] flex flex-col items-center" onClick={(e) => e.stopPropagation()}>
+            {/* Close button */}
+            <button
+              onClick={() => setLightboxIndex(null)}
+              className="absolute -top-3 -right-3 z-10 bg-white dark:bg-zinc-800 text-black dark:text-white w-9 h-9 rounded-full shadow-xl flex items-center justify-center text-lg font-bold hover:bg-red-500 hover:text-white transition-colors"
+            >
+              ✕
+            </button>
+
+            {/* Navigation arrows */}
+            {lightboxIndex > 0 && (
+              <button
+                onClick={() => setLightboxIndex(lightboxIndex - 1)}
+                className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 bg-white/90 dark:bg-zinc-800/90 w-10 h-10 rounded-full shadow-lg flex items-center justify-center text-lg hover:bg-violet-100 dark:hover:bg-violet-900 transition-colors z-10"
+              >
+                ‹
+              </button>
+            )}
+            {lightboxIndex < gallery.length - 1 && (
+              <button
+                onClick={() => setLightboxIndex(lightboxIndex + 1)}
+                className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 bg-white/90 dark:bg-zinc-800/90 w-10 h-10 rounded-full shadow-lg flex items-center justify-center text-lg hover:bg-violet-100 dark:hover:bg-violet-900 transition-colors z-10"
+              >
+                ›
+              </button>
+            )}
+
+            {/* Image/Video */}
+            {(() => {
+              const currentImg = gallery[lightboxIndex];
+              const isVid = currentImg.endsWith(".mp4") || currentImg.endsWith(".webm");
+              return isVid ? (
+                <video
+                  src={currentImg}
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  className="max-h-[70vh] w-auto rounded-2xl shadow-2xl"
+                />
+              ) : (
+                <img
+                  src={currentImg}
+                  alt={`Sticker ${lightboxIndex + 1}`}
+                  className="max-h-[70vh] w-auto rounded-2xl shadow-2xl"
+                />
+              );
+            })()}
+
+            {/* Action buttons */}
+            <div className="flex gap-3 mt-4">
+              <button
+                onClick={() => handleDownload(gallery[lightboxIndex], lightboxIndex)}
+                className="bg-white text-black text-sm font-semibold px-5 py-2 rounded-full shadow-lg hover:bg-violet-50 active:scale-95 transition-all"
+              >
+                ⬇ Save
+              </button>
+              {!gallery[lightboxIndex].endsWith(".mp4") && !gallery[lightboxIndex].endsWith(".webm") && (
+                <button
+                  onClick={() => { handleAnimate(gallery[lightboxIndex], lightboxIndex); setLightboxIndex(null); }}
+                  disabled={animatingIndex !== null}
+                  className="bg-gradient-to-r from-fuchsia-500 to-pink-500 text-white text-sm font-semibold px-5 py-2 rounded-full shadow-lg hover:opacity-90 active:scale-95 disabled:opacity-40 transition-all"
+                >
+                  🎬 Animate
+                </button>
+              )}
+              <button
+                onClick={() => { handleRemove(lightboxIndex); setLightboxIndex(null); }}
+                className="bg-red-500 text-white text-sm font-semibold px-5 py-2 rounded-full shadow-lg hover:bg-red-600 active:scale-95 transition-all"
+              >
+                🗑 ลบ
+              </button>
+            </div>
+
+            {/* Counter */}
+            <p className="text-white/60 text-xs mt-3">{lightboxIndex + 1} / {gallery.length}</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
