@@ -190,25 +190,25 @@ export default function CreatePage() {
         </div>
       </header>
 
-      <main className="flex-1 max-w-6xl mx-auto w-full px-4 py-6">
-        <div className="grid grid-cols-1 lg:grid-cols-[360px_1fr] gap-8">
+      <main className="flex-1 max-w-6xl mx-auto w-full px-4 py-8 mesh-gradient">
+        <div className="grid grid-cols-1 lg:grid-cols-[380px_1fr] gap-10">
 
           {/* Left Panel */}
-          <div className="space-y-5">
-            <div>
-              <h1 className="text-2xl font-bold mb-1">
-                🎨 สร้าง <span className="bg-gradient-to-r from-violet-500 to-fuchsia-500 bg-clip-text text-transparent">Sticker</span>
+          <div className="space-y-6">
+            <div className="animate-fade-in-up">
+              <h1 className="text-3xl font-bold mb-2">
+                <span className="inline-block animate-wiggle">🎨</span> สร้าง <span className="bg-gradient-to-r from-violet-500 to-fuchsia-500 bg-clip-text text-transparent">Sticker</span>
               </h1>
               <p className="text-sm text-muted">พิมพ์อะไรก็ได้ AI จะสร้างให้ทันที</p>
             </div>
 
             {/* Prompt */}
-            <div>
+            <div className="animate-fade-in-up stagger-1">
               <textarea
                 value={prompt}
                 onChange={(e) => setPrompt(e.target.value)}
                 placeholder="เช่น แมวส้มอ้วนๆ กำลังกินราเมน..."
-                className="w-full h-28 rounded-2xl border border-card-border bg-card px-4 py-3 text-sm text-foreground placeholder-muted focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent resize-none transition-colors"
+                className="w-full h-32 rounded-2xl border border-card-border bg-card px-5 py-4 text-sm text-foreground placeholder-muted focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent resize-none transition-all hover:border-violet-300 dark:hover:border-violet-700"
                 maxLength={200}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && !e.shiftKey && !loading) {
@@ -217,28 +217,28 @@ export default function CreatePage() {
                   }
                 }}
               />
-              <p className="mt-1 text-right text-xs text-muted">{prompt.length}/200</p>
+              <p className="mt-1.5 text-right text-xs text-muted">{prompt.length}/200</p>
             </div>
 
             {/* Style */}
-            <div>
-              <p className="text-xs font-semibold text-muted mb-2 uppercase tracking-wider">Style ({STYLES.length})</p>
-              <div className="grid grid-cols-2 gap-2 max-h-[280px] overflow-y-auto pr-1 scrollbar-thin">
+            <div className="animate-fade-in-up stagger-2">
+              <p className="text-xs font-semibold text-muted mb-3 uppercase tracking-wider">Style ({STYLES.length})</p>
+              <div className="grid grid-cols-2 gap-2.5 max-h-[300px] overflow-y-auto pr-1 scrollbar-thin">
                 {STYLES.map((s) => (
                   <button
                     key={s.id}
                     onClick={() => setStyle(s.id)}
-                    className={`flex items-center gap-2 px-2.5 py-2.5 rounded-xl border text-left transition-all ${
+                    className={`flex items-center gap-2.5 px-3 py-3 rounded-xl border text-left transition-all hover:scale-[1.03] active:scale-95 ${
                       style === s.id
-                        ? "border-violet-500 bg-violet-500/10 dark:bg-violet-500/15 ring-2 ring-violet-500/30 shadow-sm scale-[1.02]"
-                        : "border-card-border bg-card hover:border-violet-300 dark:hover:border-violet-700 hover:shadow-sm"
+                        ? "border-violet-500 bg-violet-500/10 dark:bg-violet-500/15 ring-2 ring-violet-500/30 shadow-md scale-[1.02]"
+                        : "border-card-border bg-card hover:border-violet-300 dark:hover:border-violet-700 hover:shadow-md"
                     }`}
                   >
-                    <span className={`text-lg w-7 h-7 flex items-center justify-center rounded-lg bg-gradient-to-br ${s.color} text-white text-xs shrink-0`}>
+                    <span className={`text-lg w-8 h-8 flex items-center justify-center rounded-lg bg-gradient-to-br ${s.color} text-white text-xs shrink-0 shadow-sm ${style === s.id ? "animate-wiggle" : ""}`}>
                       {s.emoji}
                     </span>
                     <div className="min-w-0">
-                      <p className={`text-xs font-semibold ${style === s.id ? "text-violet-600 dark:text-violet-400" : "text-foreground"}`}>{s.label}</p>
+                      <p className={`text-xs font-bold ${style === s.id ? "text-violet-600 dark:text-violet-400" : "text-foreground"}`}>{s.label}</p>
                       <p className="text-[10px] text-muted truncate">{s.desc}</p>
                     </div>
                   </button>
@@ -247,8 +247,8 @@ export default function CreatePage() {
             </div>
 
             {/* Batch Count */}
-            <div>
-              <label className="block text-xs font-semibold text-foreground mb-2">
+            <div className="animate-fade-in-up stagger-3">
+              <label className="block text-xs font-semibold text-foreground mb-3">
                 จำนวนรูป
                 {remaining !== null && dailyLimit !== null && (
                   <span className="ml-2 text-muted font-normal">
@@ -256,21 +256,21 @@ export default function CreatePage() {
                   </span>
                 )}
               </label>
-              <div className="flex gap-2">
+              <div className="flex gap-3">
                 {[1, 2, 3, 4].map((n) => (
                   <button
                     key={n}
                     onClick={() => setCount(n)}
                     disabled={n > 2 && !showUpgrade && remaining !== null && remaining < n}
-                    className={`flex-1 py-2 rounded-xl text-sm font-bold transition-all border ${
+                    className={`flex-1 py-2.5 rounded-xl text-sm font-bold transition-all border hover:scale-105 active:scale-95 ${
                       count === n
-                        ? "bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white border-transparent shadow-md"
-                        : "bg-card border-card-border text-foreground hover:border-fuchsia-400/50"
+                        ? "bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white border-transparent shadow-lg shadow-violet-500/20"
+                        : "bg-card border-card-border text-foreground hover:border-fuchsia-400/50 hover:shadow-md"
                     } ${n > 2 ? "opacity-60 relative" : ""}`}
                   >
                     {n}
                     {n > 2 && (
-                      <span className="absolute -top-1 -right-1 text-[9px] bg-gradient-to-r from-amber-400 to-orange-500 text-white px-1 rounded-full">
+                      <span className="absolute -top-1.5 -right-1.5 text-[9px] bg-gradient-to-r from-amber-400 to-orange-500 text-white px-1.5 py-0.5 rounded-full font-bold shadow-sm">
                         Pro
                       </span>
                     )}
@@ -283,7 +283,7 @@ export default function CreatePage() {
             <button
               onClick={handleGenerate}
               disabled={loading || !prompt.trim()}
-              className="w-full rounded-2xl bg-gradient-to-r from-violet-500 via-fuchsia-500 to-pink-500 px-6 py-4 text-sm font-bold text-white hover:shadow-lg hover:shadow-fuchsia-500/25 hover:scale-[1.01] transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:shadow-none disabled:hover:scale-100"
+              className="w-full rounded-2xl bg-gradient-to-r from-violet-500 via-fuchsia-500 to-pink-500 px-6 py-4 text-base font-bold text-white hover:shadow-xl hover:shadow-fuchsia-500/30 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:shadow-none disabled:hover:scale-100 animate-fade-in-up stagger-4 glow-violet"
             >
               {loading ? (
                 <span className="flex items-center justify-center gap-2">
@@ -377,8 +377,8 @@ export default function CreatePage() {
                 {gallery.map((img, idx) => (
                   <div
                     key={`${img}-${idx}`}
-                    className="gallery-item group relative aspect-square rounded-2xl border border-card-border overflow-hidden bg-white dark:bg-zinc-900 hover:shadow-lg hover:shadow-violet-500/10 hover:border-violet-400 dark:hover:border-violet-600 hover:scale-[1.03] transition-all"
-                    style={{ animationDelay: `${idx * 0.05}s` }}
+                    className="gallery-item group relative aspect-square rounded-2xl border border-card-border overflow-hidden bg-white dark:bg-zinc-900 hover:shadow-xl hover:shadow-violet-500/15 hover:border-violet-400 dark:hover:border-violet-600 hover:scale-[1.05] hover:-rotate-1 active:scale-95 transition-all cursor-pointer"
+                    style={{ animationDelay: `${idx * 0.08}s` }}
                   >
                     <img
                       src={img}

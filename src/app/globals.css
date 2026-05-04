@@ -112,8 +112,13 @@ body {
 
 /* Gallery card entrance */
 .gallery-item {
-  animation: scaleIn 0.4s ease-out forwards;
+  animation: scaleIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
   opacity: 0;
+}
+
+.gallery-item:hover {
+  animation: none;
+  opacity: 1;
 }
 
 /* Ad container */
