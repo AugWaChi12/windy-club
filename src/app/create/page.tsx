@@ -20,6 +20,29 @@ const STYLES = [
   { id: "neon", label: "Neon", emoji: "💡", desc: "นีออนเรืองแสง", color: "from-fuchsia-400 to-pink-500" },
 ];
 
+const PROMPT_IDEAS = [
+  { emoji: "🐱", text: "แมวส้มอ้วนๆ กำลังกินราเมน" },
+  { emoji: "🐶", text: "หมาชิบะยิ้ม ใส่แว่นกันแดด" },
+  { emoji: "🧑‍🚀", text: "นักบินอวกาศนั่งดื่มชานม" },
+  { emoji: "🦖", text: "ไดโนเสาร์ตัวเล็กถือดอกไม้" },
+  { emoji: "🐧", text: "เพนกวินใส่หมวกเชฟ ทำเค้ก" },
+  { emoji: "🦊", text: "สุนัขจิ้งจอกนั่งอ่านหนังสือ" },
+  { emoji: "🐻", text: "หมีน้อยนอนกอดหมอนบนเมฆ" },
+  { emoji: "🐰", text: "กระต่ายถือร่มเดินกลางสายฝน" },
+  { emoji: "🦄", text: "ยูนิคอร์นสีรุ้ง กินโดนัท" },
+  { emoji: "🐼", text: "แพนด้าเล่นกีตาร์ในสวน" },
+  { emoji: "🦉", text: "นกฮูกใส่แว่นตา อ่านคาถา" },
+  { emoji: "🐸", text: "กบน้อยนั่งบนใบบัว ร้องเพลง" },
+  { emoji: "🎃", text: "ฟักทองฮาโลวีนยิ้มน่ารัก" },
+  { emoji: "🍣", text: "ซูชิมีหน้า กำลังโบกมือ" },
+  { emoji: "☕", text: "แก้วกาแฟมีขา เดินไปทำงาน" },
+  { emoji: "🌵", text: "ต้นกระบองเพชรยิ้ม ใส่หมวกคาวบอย" },
+  { emoji: "🍕", text: "พิซซ่าชิ้นนึงกำลังเล่นสเก็ตบอร์ด" },
+  { emoji: "🎸", text: "แมวดำเล่นกีตาร์ไฟฟ้า บนเวที" },
+  { emoji: "🐉", text: "มังกรตัวเล็กพ่นไฟปิ้งมาร์ชเมลโลว์" },
+  { emoji: "🧙", text: "พ่อมดแมวถือไม้กายสิทธิ์" },
+];
+
 export default function CreatePage() {
   const [prompt, setPrompt] = useState("");
   const [style, setStyle] = useState("kawaii");
@@ -279,7 +302,34 @@ export default function CreatePage() {
                   }
                 }}
               />
-              <p className="mt-1.5 text-right text-xs text-muted">{prompt.length}/200</p>
+              <div className="flex items-center justify-between mt-1.5">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const idea = PROMPT_IDEAS[Math.floor(Math.random() * PROMPT_IDEAS.length)];
+                    setPrompt(idea.text);
+                  }}
+                  className="text-[11px] text-violet-500 hover:text-violet-600 dark:hover:text-violet-400 font-medium transition-colors"
+                >
+                  🎲 สุ่มไอเดีย
+                </button>
+                <p className="text-xs text-muted">{prompt.length}/200</p>
+              </div>
+              {/* Prompt suggestions */}
+              {!prompt && (
+                <div className="mt-2 flex flex-wrap gap-1.5">
+                  {PROMPT_IDEAS.slice(0, 6).map((idea) => (
+                    <button
+                      key={idea.text}
+                      type="button"
+                      onClick={() => setPrompt(idea.text)}
+                      className="text-[11px] px-2.5 py-1 rounded-full border border-card-border bg-card hover:border-violet-400 hover:bg-violet-50 dark:hover:bg-violet-500/10 text-foreground transition-all hover:scale-105 active:scale-95"
+                    >
+                      {idea.emoji} {idea.text.length > 18 ? idea.text.slice(0, 18) + "…" : idea.text}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Style */}
