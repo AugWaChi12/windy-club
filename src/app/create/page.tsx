@@ -219,6 +219,14 @@ export default function CreatePage() {
             <ThemeToggle />
             {user ? (
               <>
+                {user.email === "supakorn@windy-club.com" && (
+                  <Link
+                    href="/admin"
+                    className="text-[10px] bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white px-2.5 py-1 rounded-full font-bold hover:opacity-90 transition-opacity hidden sm:block"
+                  >
+                    ⚙️ Admin
+                  </Link>
+                )}
                 {isPro && (
                   <button
                     onClick={handleManageSubscription}
