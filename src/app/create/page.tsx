@@ -67,6 +67,16 @@ export default function CreatePage() {
       setCheckingAuth(false);
 
       if (authUser) {
+        // Fetch Pro status
+        supabase
+          .from("profiles")
+          .select("is_pro")
+          .eq("id", authUser.id)
+          .single()
+          .then(({ data: profile }) => {
+            if (profile?.is_pro) setIsPro(true);
+          });
+
         fetch("/api/stickers")
           .then((res) => res.json())
           .then((data) => {

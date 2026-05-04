@@ -43,6 +43,32 @@ async function generateVariedPrompts(
   try {
     const needsTranslation = NON_LATIN_PATTERN.test(text);
 
+    const systemPrompt = batchCount === 1
+      ? `You are a precise sticker prompt translator. Your ONLY job:
+1. ${needsTranslation ? "Translate the input ACCURATELY to English. Do NOT change the subject or meaning." : "Keep the English input exactly as-is."}
+2. Add specific visual details (colors, textures, expression) to make the prompt richer.
+3. Keep the EXACT same subject as the input. If the input says \"pizza playing skateboard\", the output MUST be about a pizza playing skateboard.
+4. Keep under 50 words.
+5. Output as a JSON array with exactly 1 string. No markdown.
+
+Example input: "พิซซ่าชิ้นนึงกำลังเล่นสเก็ตบอร์ด"
+Example output: ["a cute cartoon pizza slice with a happy face, riding a skateboard, arms spread wide for balance, wearing cool sunglasses"]
+
+IMPORTANT: NEVER change the subject. Translate faithfully.`
+      : `You are a sticker prompt engineer. Rules:
+1. ${needsTranslation ? "Translate the input ACCURATELY to English first. Do NOT change the subject." : "Keep the English input as-is."}
+2. Generate exactly ${batchCount} variations for a "${styleName}" style sticker.
+3. ALL variations MUST depict the EXACT SAME subject from the input. Only vary: pose, expression, angle, action, or background detail.
+4. If the input says "pizza", ALL outputs must be about pizza. If it says "cat", ALL must be about a cat. NEVER substitute a different subject.
+5. Keep each prompt under 50 words.
+6. Output as a JSON array of strings ONLY.
+
+Example input: "แมวส้มกินราเมน"
+Example output for 3 variations:
+["a chubby orange tabby cat sitting upright, happily slurping ramen noodles with chopsticks, eyes closed with joy","an orange tabby cat lying on belly, licking lips after finishing ramen, empty bowl beside it, sleepy satisfied face","a playful orange tabby cat standing on hind legs, holding ramen bowl above head triumphantly, big sparkling eyes"]
+
+IMPORTANT: NEVER change the subject. Translate faithfully, then vary only pose/expression.`;
+
     const response = await fetch(GROQ_API_URL, {
       method: "POST",
       headers: {
@@ -52,22 +78,10 @@ async function generateVariedPrompts(
       body: JSON.stringify({
         model: "llama-3.3-70b-versatile",
         messages: [
-          {
-            role: "system",
-            content: `You are a sticker prompt engineer. Your job:
-1. ${needsTranslation ? "Translate the input to English." : "Keep the English input as-is."}
-2. Generate exactly ${batchCount} different prompt variation(s) for a "${styleName}" style sticker.
-3. Each variation should depict the SAME subject but with DIFFERENT: pose, expression, angle, action, or mood.
-4. Keep each prompt under 60 words, detailed and specific.
-5. Output as a JSON array of strings ONLY. No markdown, no explanation.
-
-Example input: "orange cat eating ramen"
-Example output for 3 variations:
-["a chubby orange tabby cat sitting upright, happily slurping ramen from a bowl with chopsticks, eyes closed with joy, steam rising","an orange tabby cat lying on its belly, licking lips after finishing ramen, empty bowl beside it, satisfied sleepy expression","a playful orange tabby cat standing on hind legs, holding a ramen bowl above its head triumphantly, big sparkling eyes"]`,
-          },
+          { role: "system", content: systemPrompt },
           { role: "user", content: text },
         ],
-        temperature: 0.7,
+        temperature: 0.5,
         max_tokens: 600,
       }),
     });
@@ -149,6 +163,8 @@ export async function POST(request: NextRequest) {
     }
   }
 
+  const isAdmin = user.email === ADMIN_EMAIL;
+
   // Check if user is Pro
   const { data: profile } = await supabase
     .from("profiles")
@@ -156,8 +172,7 @@ export async function POST(request: NextRequest) {
     .eq("id", user.id)
     .single();
 
-  const isPro = profile?.is_pro === true;
-  const isAdmin = user.email === ADMIN_EMAIL;
+  const isPro = profile?.is_pro === true || isAdmin;
   const dailyLimit = isAdmin ? 9999 : isPro ? PRO_DAILY_LIMIT : FREE_DAILY_LIMIT;
 
   // Check daily usage (sum the count column = total images generated)
