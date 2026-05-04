@@ -1,8 +1,11 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { ThemeToggle } from "@/components/theme-provider";
 import { AdBanner } from "@/components/ad-banner";
+import { createClient } from "@/lib/supabase/client";
+import type { User } from "@supabase/supabase-js";
 
 function FloatingEmoji({ emoji, className }: { emoji: string; className: string }) {
   return (
@@ -13,6 +16,15 @@ function FloatingEmoji({ emoji, className }: { emoji: string; className: string 
 }
 
 export default function Home() {
+  const [user, setUser] = useState<User | null>(null);
+  const supabase = createClient();
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user: authUser } }) => {
+      setUser(authUser);
+    });
+  }, [supabase.auth]);
+
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground overflow-hidden mesh-gradient">
       {/* Floating decorations */}
@@ -49,18 +61,29 @@ export default function Home() {
           </h1>
           <div className="flex items-center gap-2">
             <ThemeToggle />
-            <Link
-              href="/login"
-              className="rounded-full border border-card-border px-4 py-1.5 text-xs font-medium text-foreground hover:border-violet-400 transition-all"
-            >
-              เข้าสู่ระบบ
-            </Link>
-            <Link
-              href="/create"
-              className="rounded-full bg-gradient-to-r from-violet-500 to-fuchsia-500 px-4 py-1.5 text-xs font-medium text-white hover:opacity-90 hover:scale-105 transition-all"
-            >
-              เริ่มสร้าง
-            </Link>
+            {user ? (
+              <Link
+                href="/create"
+                className="rounded-full bg-gradient-to-r from-violet-500 to-fuchsia-500 px-4 py-1.5 text-xs font-medium text-white hover:opacity-90 hover:scale-105 transition-all"
+              >
+                เริ่มสร้าง
+              </Link>
+            ) : (
+              <>
+                <Link
+                  href="/login"
+                  className="rounded-full border border-card-border px-4 py-1.5 text-xs font-medium text-foreground hover:border-violet-400 transition-all"
+                >
+                  เข้าสู่ระบบ
+                </Link>
+                <Link
+                  href="/create"
+                  className="rounded-full bg-gradient-to-r from-violet-500 to-fuchsia-500 px-4 py-1.5 text-xs font-medium text-white hover:opacity-90 hover:scale-105 transition-all"
+                >
+                  เริ่มสร้าง
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </header>
