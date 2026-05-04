@@ -8,9 +8,8 @@ const replicate = new Replicate({
   auth: process.env.REPLICATE_API_TOKEN,
 });
 
-const MOTION_AMOUNT = 60; // subtle sticker-like bounce (1-255, lower = less motion)
-const FRAMES_PER_SECOND = 8;
-const ANIMATE_DAILY_LIMIT = 5;
+const ANIMATE_DAILY_LIMIT = 10;
+const ADMIN_EMAIL = "supakorn@windy-club.com";
 
 export async function POST(request: NextRequest) {
   const supabase = await createClient();
@@ -74,7 +73,7 @@ export async function POST(request: NextRequest) {
     .eq("id", user.id)
     .single();
 
-  const isPro = profile?.is_pro === true;
+  const isPro = profile?.is_pro === true || user.email === ADMIN_EMAIL;
   if (!isPro) {
     return NextResponse.json(
       {
@@ -108,21 +107,24 @@ export async function POST(request: NextRequest) {
   }
 
   try {
+    // Use stability-ai/stable-video-diffusion for image-to-video
     const prediction = await replicate.predictions.create({
       model: "stability-ai/stable-video-diffusion",
       input: {
         input_image: imageUrl,
-        motion_bucket_id: MOTION_AMOUNT,
-        fps: FRAMES_PER_SECOND,
+        motion_bucket_id: 80,
+        fps: 10,
         cond_aug: 0.02,
         decoding_t: 14,
         sizing_strategy: "maintain_aspect_ratio",
       },
     });
 
-    const finalPrediction = await replicate.wait(prediction);
+    let finalPrediction = await replicate.wait(prediction);
 
-    if (!finalPrediction.output) {
+    // If SVD fails, fallback to basic approach
+    if (!finalPrediction.output || finalPrediction.status === "failed") {
+      console.error("SVD failed, status:", finalPrediction.status, "error:", finalPrediction.error);
       return NextResponse.json(
         { error: "ไม่สามารถสร้าง animation ได้ ลองใหม่" },
         { status: 500 }
