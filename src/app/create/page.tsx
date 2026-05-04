@@ -181,25 +181,57 @@ export default function CreatePage() {
     setAnimatingIndex(index);
     setError("");
     try {
-      const response = await fetch("/api/animate", {
+      // Step 1: Start the prediction (returns immediately)
+      const startRes = await fetch("/api/animate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ imageUrl }),
       });
-      const data = await response.json();
-      if (!response.ok) {
-        if (data.upgrade) setShowUpgrade(true);
-        setError(data.error || "สร้าง animation ไม่สำเร็จ");
+      const startData = await startRes.json();
+      if (!startRes.ok) {
+        if (startData.upgrade) setShowUpgrade(true);
+        setError(startData.error || "สร้าง animation ไม่สำเร็จ");
+        setAnimatingIndex(null);
         return;
       }
-      if (data.videoUrl) {
-        setGallery((prev) => {
-          const updated = [...prev];
-          // Insert animated version right after the original
-          updated.splice(index, 0, data.videoUrl);
-          return updated;
-        });
+
+      const { predictionId } = startData;
+      if (!predictionId) {
+        setError("ไม่ได้รับ prediction ID");
+        setAnimatingIndex(null);
+        return;
       }
+
+      // Step 2: Poll every 3 seconds until done
+      const POLL_INTERVAL_MS = 3000;
+      const MAX_POLLS = 60; // 3 minutes max
+      for (let attempt = 0; attempt < MAX_POLLS; attempt++) {
+        await new Promise((resolve) => setTimeout(resolve, POLL_INTERVAL_MS));
+
+        const pollRes = await fetch(`/api/animate?id=${encodeURIComponent(predictionId)}`);
+        const pollData = await pollRes.json();
+
+        if (pollData.status === "succeeded" && pollData.videoUrl) {
+          setGallery((prev) => {
+            const updated = [...prev];
+            updated.splice(index, 0, pollData.videoUrl);
+            return updated;
+          });
+          setAnimatingIndex(null);
+          return;
+        }
+
+        if (pollData.status === "failed") {
+          setError(pollData.error || "สร้าง animation ไม่สำเร็จ");
+          setAnimatingIndex(null);
+          return;
+        }
+
+        // still "starting" or "processing" → continue polling
+      }
+
+      // Timed out after max polls
+      setError("Animation ใช้เวลานานเกินไป ลองใหม่อีกครั้ง");
     } catch {
       setError("ไม่สามารถเชื่อมต่อได้ ลองใหม่อีกครั้ง");
     } finally {
@@ -548,7 +580,8 @@ export default function CreatePage() {
                       <div className="absolute inset-0 bg-black/60 flex items-center justify-center z-10">
                         <div className="text-center space-y-2">
                           <div className="inline-block animate-spin h-6 w-6 border-2 border-fuchsia-400 border-t-transparent rounded-full" />
-                          <p className="text-[11px] text-white font-medium">กำลังสร้าง...</p>
+                          <p className="text-[11px] text-white font-medium">🎬 กำลังสร้าง Animation...</p>
+                          <p className="text-[9px] text-white/60">ใช้เวลา ~30 วินาที</p>
                         </div>
                       </div>
                     )}
