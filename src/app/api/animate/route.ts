@@ -2,6 +2,7 @@ import Replicate from "replicate";
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
+import { rateLimit } from "@/lib/rate-limit";
 
 const replicate = new Replicate({
   auth: process.env.REPLICATE_API_TOKEN,
@@ -21,6 +22,15 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       { error: "กรุณาเข้าสู่ระบบก่อน" },
       { status: 401 }
+    );
+  }
+
+  // Per-user rate limit: max 2 requests per 60 seconds
+  const rl = rateLimit(`anim:${user.id}`, 2, 60_000);
+  if (!rl.allowed) {
+    return NextResponse.json(
+      { error: "คำขอถี่เกินไป รอสักครู่แล้วลองใหม่" },
+      { status: 429 }
     );
   }
 

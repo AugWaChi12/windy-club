@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { stripe, PRICE_ID } from "@/lib/stripe";
+import { rateLimit } from "@/lib/rate-limit";
 
 export async function POST() {
   const supabase = await createClient();
@@ -8,6 +9,15 @@ export async function POST() {
 
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  // Rate limit: max 3 checkout attempts per 5 minutes
+  const rl = rateLimit(`checkout:${user.id}`, 3, 300_000);
+  if (!rl.allowed) {
+    return NextResponse.json(
+      { error: "คำขอถี่เกินไป รอสักครู่แล้วลองใหม่" },
+      { status: 429 }
+    );
   }
 
   // Prevent double-billing: check if user is already Pro

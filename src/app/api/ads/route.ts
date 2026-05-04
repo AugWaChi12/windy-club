@@ -16,23 +16,19 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ ads: [] });
   }
 
-  // Increment impressions (simple approach, fire and forget)
+  // Increment impressions atomically (fire and forget)
   if (ads && ads.length > 0) {
     for (const ad of ads) {
-      supabaseAdmin
-        .from("ads")
-        .select("impressions")
-        .eq("id", ad.id)
-        .single()
-        .then(({ data }) => {
-          if (data) {
-            supabaseAdmin
-              .from("ads")
-              .update({ impressions: (data.impressions || 0) + 1 })
-              .eq("id", ad.id)
-              .then(() => {});
-          }
-        });
+      supabaseAdmin.rpc("increment_ad_impressions", { ad_id: ad.id }).then(({ error: rpcErr }) => {
+        if (rpcErr) {
+          // Fallback: direct update if RPC doesn't exist yet
+          supabaseAdmin
+            .from("ads")
+            .update({ impressions: ((ad as Record<string, number>).impressions || 0) + 1 })
+            .eq("id", ad.id)
+            .then(() => {});
+        }
+      });
     }
   }
 

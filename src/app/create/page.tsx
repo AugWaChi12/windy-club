@@ -130,6 +130,16 @@ export default function CreatePage() {
   async function handleUpgrade() {
     const response = await fetch("/api/checkout", { method: "POST" });
     const data = await response.json();
+    if (data.alreadyPro) {
+      setError("คุณเป็น Pro อยู่แล้ว!");
+      return;
+    }
+    if (data.url) window.location.href = data.url;
+  }
+
+  async function handleManageSubscription() {
+    const response = await fetch("/api/portal", { method: "POST" });
+    const data = await response.json();
     if (data.url) window.location.href = data.url;
   }
 
@@ -209,6 +219,14 @@ export default function CreatePage() {
             <ThemeToggle />
             {user ? (
               <>
+                {isPro && (
+                  <button
+                    onClick={handleManageSubscription}
+                    className="text-[10px] bg-gradient-to-r from-amber-400 to-orange-500 text-white px-2.5 py-1 rounded-full font-bold hover:opacity-90 transition-opacity hidden sm:block"
+                  >
+                    ⭐ Pro
+                  </button>
+                )}
                 <span className="text-xs text-muted hidden sm:block">{user.email}</span>
                 <button
                   onClick={handleLogout}

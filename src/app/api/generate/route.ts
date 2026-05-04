@@ -2,6 +2,7 @@ import Replicate from "replicate";
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
+import { rateLimit } from "@/lib/rate-limit";
 
 const replicate = new Replicate({
   auth: process.env.REPLICATE_API_TOKEN,
@@ -101,6 +102,15 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       { error: "กรุณาเข้าสู่ระบบก่อนสร้าง Sticker" },
       { status: 401 }
+    );
+  }
+
+  // Per-user rate limit: max 5 requests per 30 seconds
+  const rl = rateLimit(`gen:${user.id}`, 5, 30_000);
+  if (!rl.allowed) {
+    return NextResponse.json(
+      { error: "คำขอถี่เกินไป รอสักครู่แล้วลองใหม่" },
+      { status: 429 }
     );
   }
 

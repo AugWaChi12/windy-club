@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { rateLimit } from "@/lib/rate-limit";
 
 const ALLOWED_HOSTS = [
   "replicate.delivery",
@@ -7,6 +8,17 @@ const ALLOWED_HOSTS = [
 ];
 
 export async function GET(request: NextRequest) {
+  // Rate limit by IP: max 30 downloads per minute
+  const forwarded = request.headers.get("x-forwarded-for");
+  const clientIp = forwarded?.split(",")[0]?.trim() || "unknown";
+  const rl = rateLimit(`proxy:${clientIp}`, 30, 60_000);
+  if (!rl.allowed) {
+    return NextResponse.json(
+      { error: "Too many requests" },
+      { status: 429 }
+    );
+  }
+
   const imageUrl = request.nextUrl.searchParams.get("url");
 
   if (!imageUrl) {
