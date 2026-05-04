@@ -41,18 +41,20 @@ export default function Home() {
       <header className="relative z-10 border-b border-card-border backdrop-blur-xl bg-background/80">
         <div className="max-w-6xl mx-auto flex items-center justify-between px-4 py-3">
           <h1 className="text-lg font-bold flex items-center gap-2">
-            <span className="relative w-7 h-7 flex items-center justify-center">
-              <svg viewBox="0 0 32 32" className="w-7 h-7" fill="none">
+            <span className="relative w-8 h-8 flex items-center justify-center">
+              <svg viewBox="0 0 64 64" className="w-8 h-8" fill="none">
                 <defs>
-                  <linearGradient id="logo-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <linearGradient id="logo-grad" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
                     <stop offset="0%" stopColor="#7c3aed" />
                     <stop offset="50%" stopColor="#d946ef" />
                     <stop offset="100%" stopColor="#ec4899" />
                   </linearGradient>
                 </defs>
-                <circle cx="16" cy="16" r="14" stroke="url(#logo-grad)" strokeWidth="2.5" fill="none" className="logo-ring" />
-                <path d="M10 20 C10 14, 16 8, 22 12 C20 16, 18 18, 16 20 C14 18, 12 16, 10 20Z" fill="url(#logo-grad)" opacity="0.9" />
-                <circle cx="20" cy="10" r="2" fill="url(#logo-grad)" opacity="0.6" />
+                <circle cx="32" cy="32" r="30" fill="url(#logo-grad)" />
+                <path d="M18 22 L25 44 L32 30 L39 44 L46 22" stroke="#fff" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+                <path d="M2 20 C6 18, 10 22, 14 18" stroke="url(#logo-grad)" strokeWidth="2" strokeLinecap="round" fill="none" opacity="0.5" />
+                <path d="M0 28 C5 26, 9 30, 13 26" stroke="url(#logo-grad)" strokeWidth="1.5" strokeLinecap="round" fill="none" opacity="0.3" />
+                <circle cx="52" cy="12" r="5" fill="#fff" opacity="0.2" />
               </svg>
             </span>
             <span className="bg-gradient-to-r from-violet-500 via-fuchsia-500 to-pink-500 bg-clip-text text-transparent animate-gradient">
