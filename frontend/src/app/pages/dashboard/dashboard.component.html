@@ -1,0 +1,73 @@
+<div class="min-h-screen p-6">
+  <!-- Header -->
+  <header class="flex items-center justify-between mb-8">
+    <div class="flex items-center gap-3">
+      <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-[#00d2a8] to-[#00a885] flex items-center justify-center">
+        <span class="text-white font-bold text-lg">W</span>
+      </div>
+      <div>
+        <h1 class="text-xl font-bold text-[var(--text-primary)]">Windy Chain Intelligence</h1>
+        <p class="text-xs text-[var(--text-muted)]">KUB Chain Analytics Platform</p>
+      </div>
+    </div>
+    <div class="flex items-center gap-4">
+      <div class="text-xs text-[var(--text-muted)] bg-[var(--bg-card)] px-3 py-1.5 rounded-lg border border-[var(--border)]">
+        Block #{{ latestBlock | number }}
+      </div>
+      <nav class="flex gap-2">
+        <a routerLink="/dashboard" class="text-xs px-3 py-1.5 rounded-lg bg-[var(--accent)]/10 text-[var(--accent)] font-medium">Dashboard</a>
+        <a routerLink="/wallet" class="text-xs px-3 py-1.5 rounded-lg text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors">Wallet</a>
+        <a routerLink="/analytics" class="text-xs px-3 py-1.5 rounded-lg text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors">Analytics</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Search Bar -->
+  <div class="max-w-2xl mx-auto mb-10">
+    <div class="relative">
+      <input
+        [(ngModel)]="searchAddress"
+        type="text"
+        placeholder="Enter wallet address (0x...)"
+        class="w-full bg-[var(--bg-card)] border border-[var(--border)] rounded-2xl px-5 py-4 text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-[var(--accent)] transition-colors"
+      />
+      <a
+        [routerLink]="['/wallet']"
+        [queryParams]="{ address: searchAddress }"
+        class="absolute right-2 top-1/2 -translate-y-1/2 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-[var(--bg-primary)] px-5 py-2 rounded-xl text-sm font-semibold transition-colors"
+      >
+        Analyze
+      </a>
+    </div>
+  </div>
+
+  <!-- Stats Grid -->
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+    <div class="bg-[var(--bg-card)] border border-[var(--border)] rounded-2xl p-5">
+      <p class="text-xs text-[var(--text-muted)] mb-1">Network</p>
+      <p class="text-lg font-bold text-[var(--accent)]">KUB Chain</p>
+      <p class="text-xs text-[var(--text-muted)] mt-1">Chain ID: 96</p>
+    </div>
+    <div class="bg-[var(--bg-card)] border border-[var(--border)] rounded-2xl p-5">
+      <p class="text-xs text-[var(--text-muted)] mb-1">Latest Block</p>
+      <p class="text-lg font-bold text-[var(--text-primary)]">{{ latestBlock | number }}</p>
+      <p class="text-xs text-[var(--success)] mt-1">● Live</p>
+    </div>
+    <div class="bg-[var(--bg-card)] border border-[var(--border)] rounded-2xl p-5">
+      <p class="text-xs text-[var(--text-muted)] mb-1">KUB Price</p>
+      <p class="text-lg font-bold text-[var(--text-primary)]">$2.50</p>
+      <p class="text-xs text-[var(--success)] mt-1">+2.3%</p>
+    </div>
+    <div class="bg-[var(--bg-card)] border border-[var(--border)] rounded-2xl p-5">
+      <p class="text-xs text-[var(--text-muted)] mb-1">Alerts</p>
+      <p class="text-lg font-bold text-[var(--warning)]">{{ alerts.length }}</p>
+      <p class="text-xs text-[var(--text-muted)] mt-1">Unread</p>
+    </div>
+  </div>
+
+  <!-- Whale Alerts -->
+  <div class="mb-8">
+    <h2 class="text-sm font-semibold text-[var(--text-secondary)] mb-4">🐋 Recent Whale Alerts</h2>
+    <app-whale-alert [alerts]="alerts"></app-whale-alert>
+  </div>
+</div>

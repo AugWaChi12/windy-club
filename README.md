@@ -1,36 +1,123 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Windy Chain Intelligence
 
-## Getting Started
+Blockchain analytics platform for KUB Chain (EVM-compatible). Transforms raw transaction data into meaningful financial insights.
 
-First, run the development server:
+## Architecture
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+```
+┌─────────────┐     ┌──────────────┐     ┌───────────┐
+│   Angular   │────▶│  Spring Boot │────▶│ PostgreSQL│
+│  Frontend   │◀────│   Backend    │────▶│   Redis   │
+└─────────────┘     └──────┬───────┘     └───────────┘
+                           │
+                    ┌──────▼───────┐
+                    │  KUB Chain   │
+                    │  (EVM RPC)   │
+                    └──────────────┘
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Tech Stack
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- **Backend:** Java 21, Spring Boot 3.3, JPA, WebSocket
+- **Frontend:** Angular 20, TailwindCSS, STOMP WebSocket
+- **Database:** PostgreSQL 16
+- **Cache:** Redis 7
+- **Blockchain:** Web3j → KUB Chain RPC
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Features
 
-## Learn More
+- 🔍 Wallet Analytics (balance, history, behavior profiling)
+- 📊 Transaction Parser (classify: transfer, swap, stake, bridge)
+- 📈 PnL Engine (profit/loss, average cost, staking rewards)
+- 🐋 Whale Tracking (large transaction detection + real-time alerts)
+- 🪙 Token Scanner (new contracts, volume spikes)
+- 🌉 Bridge Analysis (net flow in/out)
+- 🧠 Behavior Profiling (holder, trader, staker classification)
+- ⚡ Real-time updates via WebSocket
 
-To learn more about Next.js, take a look at the following resources:
+## Quick Start
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Docker (recommended)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+docker compose up -d
+```
 
-## Deploy on Vercel
+- Frontend: http://localhost:4200
+- Backend API: http://localhost:8080
+- PostgreSQL: localhost:5432
+- Redis: localhost:6379
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Manual Development
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+#### Backend
+
+```bash
+cd backend
+./mvnw spring-boot:run
+```
+
+Requires: Java 21, PostgreSQL, Redis running locally.
+
+#### Frontend
+
+```bash
+cd frontend
+npm install
+ng serve
+```
+
+Open http://localhost:4200
+
+## API Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/wallet/{address}` | Wallet info + balance |
+| GET | `/api/tx/{address}?page=0&size=20` | Transaction history |
+| GET | `/api/pnl/{address}` | Profit & Loss calculation |
+| GET | `/api/analytics/{address}` | Full analytics + behavior |
+
+### WebSocket
+
+- `/ws` — STOMP endpoint (SockJS)
+- `/topic/alerts` — Whale & token alerts
+- `/topic/blocks` — New block notifications
+- `/topic/wallet/{address}` — Wallet-specific updates
+
+## Project Structure
+
+```
+windy-club/
+├── backend/
+│   ├── src/main/java/com/windychain/intelligence/
+│   │   ├── config/          # App configuration
+│   │   ├── integration/     # External service clients
+│   │   ├── event/           # Block processor, event handlers
+│   │   ├── websocket/       # WebSocket handlers
+│   │   └── module/
+│   │       ├── wallet/      # Wallet domain
+│   │       ├── transaction/ # Transaction domain
+│   │       ├── pnl/         # PnL calculations
+│   │       ├── analytics/   # Analytics engine
+│   │       ├── alert/       # Alert system
+│   │       ├── staking/     # Staking positions
+│   │       └── token/       # Token scanner
+│   └── src/main/resources/
+│       ├── application.yml
+│       └── db/migration/    # Flyway migrations
+├── frontend/
+│   └── src/app/
+│       ├── pages/           # Dashboard, Wallet, Analytics
+│       ├── components/      # Reusable UI components
+│       ├── services/        # API & WebSocket services
+│       └── models/          # TypeScript interfaces
+├── docker-compose.yml
+├── Dockerfile.backend
+├── Dockerfile.frontend
+└── nginx.conf
+```
+
+## License
+
+Private — All rights reserved.

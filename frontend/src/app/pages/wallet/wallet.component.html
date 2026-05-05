@@ -1,0 +1,36 @@
+<div class="min-h-screen p-6">
+  <header class="flex items-center gap-3 mb-8">
+    <a routerLink="/dashboard" class="text-[var(--text-muted)] hover:text-[var(--accent)] transition-colors text-sm">← Back</a>
+    <h1 class="text-lg font-bold text-[var(--text-primary)]">Wallet Analysis</h1>
+  </header>
+
+  @if (loading) {
+    <div class="flex items-center justify-center py-20">
+      <div class="w-8 h-8 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin"></div>
+    </div>
+  }
+
+  @if (error) {
+    <div class="bg-[var(--danger)]/10 border border-[var(--danger)]/30 rounded-xl p-4 text-sm text-[var(--danger)]">
+      {{ error }}
+    </div>
+  }
+
+  @if (wallet) {
+    <div class="space-y-6">
+      <!-- Wallet Overview -->
+      <app-wallet-overview [wallet]="wallet"></app-wallet-overview>
+
+      <!-- PnL & Staking -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        @if (pnl) {
+          <app-pnl-chart [pnl]="pnl"></app-pnl-chart>
+        }
+        <app-staking-panel [address]="address"></app-staking-panel>
+      </div>
+
+      <!-- Transactions -->
+      <app-transaction-list [transactions]="transactions"></app-transaction-list>
+    </div>
+  }
+</div>
